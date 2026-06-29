@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>代數大師：多項式完全體聯網整合機 (化簡 & 展開)</title>
+    <title>多項式練習系統</title>
     <style>
         :root {
             --primary: #2b5797;
@@ -220,7 +220,7 @@
 
 <div class="container">
     <div class="print-only-header">
-        <h1>🔮 多項式代數大師 - 學生個人學習歷程報告</h1>
+        <h1>🔮 多項式 - 學生學習報告</h1>
         <h2 id="printStudentInfo" style="color:#111;">學生班別：載入中...</h2>
         <p id="printDate">產出日期：載入中...</p>
     </div>
@@ -229,10 +229,7 @@
     <hr class="non-print" style="border: 0; height: 1px; background: #ddd; margin-bottom: 20px;">
 
     <div id="step0_login" class="step-panel active">
-        <h2 style="margin-bottom: 20px;">👤 學生數據個人化登入 (多核心數據庫互通版)</h2>
-        <div class="supported-types" style="text-align: center;">
-            💡 本系統已整合 <b>多項式化簡</b> 與 <b>多項式展開</b> 功能，進度將依據模組完美儲存於 Google 雲端試算表。
-        </div>
+        <h2 style="margin-bottom: 20px;">👤 學生登入</h2>
         <div class="form-group">
             <label for="loginClass">🏫 請選取您的班別：</label>
             <select id="loginClass">
@@ -333,7 +330,7 @@
     </div>
 
     <div id="step1_solver" class="step-panel">
-        <h2>🛠️ 解答模式（智慧相容出題）</h2>
+        <h2>🛠️ 解答模式</h2>
         <div class="form-group">
             <label for="eqInput">✏️ 請輸入多項式算式：</label>
             <input type="text" id="eqInput" placeholder="例如：(3m + 2n) - (5m - n) 或 (x+2)(x-3)">
@@ -467,7 +464,7 @@
     </div>
 
     <div class="print-footer">
-        <p>代數大師：多項式完全體整合系統 © 2026 數位教學歷程系統</p>
+        <p>數學練習整合系統©2026 羅坤山老師</p>
     </div>
 </div>
 
@@ -1067,7 +1064,7 @@
 
         if (currentEngine === 'MULTIPLY') {
             targetFormulaV1 = polyData.step2_formula;
-            html += `<div class="form-group"><label>✏️ 一次項 ${polyData.v1} 的係數加減算式（對照田字格右上與左下格，例如：15+8）：</label><input type="text" id="coeffV1Input" placeholder="請填入算式"></div>`;
+            html += `<div class="form-group"><label>✏️ 一次項 ${polyData.v1} 的係數加減算式（對照田字格右上與左下格，例如：15+8 Orient）：</label><input type="text" id="coeffV1Input" placeholder="請填入算式"></div>`;
         } else {
             let cSign = polyData.sign === '+' ? polyData.c : -polyData.c; targetFormulaV1 = `${polyData.a}${fmtSign(cSign)}`;
             html += `<div class="form-group"><label>✏️ ${polyData.v1} 項的係數合併過程（對照上方黑板，如：${polyData.a}${fmtSign(cSign)}）：</label><input type="text" id="coeffV1Input" placeholder="請填入算式"></div>`;
@@ -1218,7 +1215,7 @@
                 printInfo.innerHTML = `
                     <span class="info-span">學生班別：${userRawClass} 班</span>
                     <span class="info-span">學號：${userRawSeat} 號</span>
-                    <span class="info-span">報告：全功能綜合歷程報告</span>
+                    <span class="info-span">報告：多項式</span>
                 `;
             }
         }
