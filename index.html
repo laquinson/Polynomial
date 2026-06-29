@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>代數大師：多項式完全體聯網整合機 (化簡 & 展開)</title>
+    <style>
+        :root {
+            --primary: #2b5797;
+            --success: #1e7e34;
+            --danger: #bd2130;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --stage-bg: #1a202c;
+            --bg: #f4f6f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .home-nav-btn {
+            position: absolute; left: 20px; top: 25px; width: auto; padding: 8px 16px;
+            background-color: #ffffff; color: #4a5568; border: 2px solid #cbd5e1; border-radius: 6px;
+            font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: none; z-index: 10;
+        }
+        .home-nav-btn:hover { background-color: #f8fafc; border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+
+        .logout-btn {
+            position: absolute; right: 20px; top: 25px; width: auto; padding: 8px 16px;
+            background-color: #fff1f2; color: var(--danger); border: 2px solid #fecdd3; border-radius: 6px;
+            font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;
+            display: none; z-index: 10;
+        }
+        .logout-btn:hover { background-color: var(--danger); color: white; transform: translateY(-1px); }
+
+        .container {
+            max-width: 900px; width: 100%; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-top: 20px;
+        }
+
+        h1, h2 { text-align: center; color: var(--primary); margin-top: 0; }
+        .step-panel { display: none; }
+        .step-panel.active { display: block; }
+        
+        .form-group { margin-bottom: 25px; width: 100%; box-sizing: border-box; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #4a5568; }
+        
+        input[type="text"], input[type="number"], select {
+            width: 100%; padding: 14px; border: 2px solid #ccd1d9; border-radius: 8px; font-size: 18px; box-sizing: border-box; background: #fff;
+        }
+
+        .mode-selection-box { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+        .mode-card {
+            flex: 1; min-width: 200px; border: 2px solid #ccd1d9; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fff;
+        }
+        .mode-card:hover { border-color: var(--primary); background: #f0f4f8; transform: translateY(-3px); }
+        .mode-card.disabled { opacity: 0.5; cursor: not-allowed; background: #eaedf2; border-color: #cbd5e1; }
+        .mode-card.disabled:hover { transform: none; border-color: #cbd5e1; background: #eaedf2; }
+        .mode-card h3 { margin-top: 0; color: var(--primary); font-size: 18px; }
+        .mode-card p { color: #666; font-size: 13px; line-height: 1.5; margin-bottom: 0; }
+        .badge-count { background: var(--danger); color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: 5px; }
+
+        .radio-group { display: flex; gap: 20px; margin-top: 5px; background: #edf2f7; padding: 10px; border-radius: 8px; }
+        .radio-option { display: flex; align-items: center; gap: 6px; font-weight: bold; cursor: pointer; }
+        .radio-option input { cursor: pointer; transform: scale(1.1); }
+
+        button {
+            width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;
+        }
+        button:hover { filter: brightness(0.9); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        button:disabled { background-color: #ccd1d9 !important; cursor: not-allowed; box-shadow: none !important; filter: none !important; }
+        button.btn-success { background-color: var(--success); }
+        button.btn-warning { background-color: #d97706; }
+        button.btn-info { background-color: var(--info); }
+        button.btn-secondary { background-color: #6c757d; margin-top: 15px; }
+
+        .progress-banner {
+            background: #e2e8f0; padding: 12px 20px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 16px; align-items: center;
+        }
+        
+        .banner-right-zone { display: flex; align-items: center; gap: 12px; }
+        .type-badge { background: #cbd5e1; color: #334155; padding: 4px 12px; border-radius: 6px; font-size: 14px; }
+        .score-badge { background: var(--stage-bg); color: #fffb00; padding: 4px 12px; border-radius: 20px; font-size: 15px; }
+
+        .stage-box {
+            background: var(--stage-bg); border-radius: 12px; padding: 25px; margin: 20px 0; color: white;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 1px;
+        }
+
+        .term-v1 { color: #63b3ed; border-bottom: 2px dashed #63b3ed; padding: 0 2px; }
+        .term-v2 { color: #f6ad55; border-bottom: 2px dashed #f6ad55; padding: 0 2px; }
+        .term-c { color: #68d391; border-bottom: 2px dashed #68d391; padding: 0 2px; }
+
+        .feedback { padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: bold; line-height: 1.6; font-size: 16px; }
+        .feedback.error { background-color: #fce8e6; color: var(--danger); border-left: 6px solid var(--danger); }
+        .feedback.warning { background-color: #fffbeb; color: #b45309; border-left: 6px solid #f59e0b; }
+        .feedback.success { background-color: #e6f4ea; color: var(--success); border-left: 6px solid var(--success); }
+        .feedback.info { background-color: #e3f2fd; color: #0d47a1; border-left: 6px solid #1976d2; }
+
+        #solveBtn { background-color: var(--warning); color: #111; font-size: 18px; margin: 15px 0; display: none; }
+        
+        @keyframes magicGlow {
+            0% { box-shadow: 0 0 5px #4f46e5; border-color: #4f46e5; }
+            50% { box-shadow: 0 0 25px #d97706, inset 0 0 10px #d97706; border-color: #ffc107; }
+            100% { box-shadow: 0 0 5px #4f46e5; border-color: #4f46e5; }
+        }
+        @keyframes fadeInZone {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .magic-active-zone {
+            animation: magicGlow 2s infinite ease-in-out;
+            border: 2px solid #ffc107 !important;
+        }
+        .teaching-row { 
+            display: flex; gap: 20px; margin-top: 25px; flex-direction: column; width: 100%; box-sizing: border-box; 
+        }
+        .teaching-row.animate-fade {
+            animation: fadeInZone 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @media(min-width: 768px) { .teaching-row { flex-direction: row; } }
+        .teaching-column { flex: 1; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; box-sizing: border-box; }
+        .teaching-column h3 { margin-top: 0; border-bottom: 2px solid var(--primary); padding-bottom: 8px; color: var(--primary); }
+        
+        .math-step-box { font-family: 'Courier New', Courier, monospace; background: #222; color: #00ff00; padding: 15px; border-radius: 6px; font-size: 15px; line-height: 1.8; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+        .math-step-box .active-line { background: #333; color: #fffb00; font-weight: bold; padding: 2px 5px; border-radius: 3px; }
+        
+        .block-form { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; width: 100%; box-sizing: border-box; }
+        .block-form label { font-size: 16px; color: #334155; margin-bottom: 2px; }
+        .block-form input[type="text"] { font-size: 18px; padding: 14px; letter-spacing: 1px; width: 100%; display: block; box-sizing: border-box; }
+        .block-form button { width: 100%; background-color: var(--success); font-size: 16px; margin-top: 5px; padding: 12px; }
+        
+        .supported-types { background: #f0f4f8; padding: 10px; border-radius: 6px; font-size: 14px; color: #555; margin-bottom: 15px; }
+
+        table.stats-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 15px; }
+        table.stats-table th, table.stats-table td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
+        table.stats-table th { background: #f1f5f9; color: #334155; }
+        .btn-group { display: flex; gap: 15px; margin-top: 20px; }
+
+        /* 田字格專屬響應式排版 */
+        .grid-table {
+            display: grid;
+            grid-template-columns: 80px 1fr 1fr;
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 420px;
+            background: #dee2e6;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .grid-cell {
+            background: white;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 6px;
+            color: #333;
+        }
+        .grid-header { background: #e2e8f0; color: #334155; }
+        .grid-input {
+            width: 90%; height: 80%; font-size: 20px; text-align: center;
+            border: 2px solid #cbd5e1; border-radius: 6px; outline: none; font-weight: bold;
+        }
+        .grid-input:focus { border-color: var(--primary); background: #f8fafc; }
+        .grid-input:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; border-color: #cbd5e1; }
+
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px; border-radius: 50%;
+            border-left-color: var(--primary); animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media print {
+            body { background: white; color: black; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; margin: 0; }
+            .home-nav-btn, .logout-btn, button, .mode-selection-box, .supported-types, .form-group, hr, .btn-group, .loading-overlay {
+                display: none !important;
+            }
+            .step-panel { display: none !important; }
+            #step_stats_panel { display: block !important; }
+            table.stats-table th { background: #e2e8f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-only-header { display: block !important; text-align: center; margin-bottom: 30px; border-bottom: 3px double #333; padding-bottom: 10px; }
+            .print-footer { display: block !important; text-align: center; font-size: 12px; color: #666; margin-top: 50px; }
+        }
+        .print-only-header, .print-footer { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+    <p style="margin-top: 15px; font-weight: bold; color: var(--primary);" id="loadingText">雲端通訊中...</p>
+</div>
+
+<button id="globalHomeBtn" class="home-nav-btn" onclick="resetToMainMenu(true)">↩️ 返回主選單</button>
+<button id="globalLogoutBtn" class="logout-btn" onclick="logoutStudent()">🚪 切換帳號</button>
+
+<div class="container">
+    <div class="print-only-header">
+        <h1>🔮 多項式代數大師 - 學生個人學習歷程報告</h1>
+        <h2 id="printStudentInfo" style="color:#111;">學生班別：載入中...</h2>
+        <p id="printDate">產出日期：載入中...</p>
+    </div>
+
+    <h1 class="non-print">🔮 多項式代數大師 (完全體二合一整合版)</h1>
+    <hr class="non-print" style="border: 0; height: 1px; background: #ddd; margin-bottom: 20px;">
+
+    <div id="step0_login" class="step-panel active">
+        <h2 style="margin-bottom: 20px;">👤 學生數據個人化登入 (多核心數據庫互通版)</h2>
+        <div class="supported-types" style="text-align: center;">
+            💡 本系統已整合 <b>多項式化簡(加減)</b> 與 <b>多項式展開(乘法)</b> 功能，進度將依據模組完美儲存於 Google 雲端試算表。
+        </div>
+        <div class="form-group">
+            <label for="loginClass">🏫 請選取您的班別：</label>
+            <select id="loginClass">
+                <script>
+                    (function() {
+                        var html = "";
+                        for (var grade = 1; grade <= 6; grade++) {
+                            ['A', 'B', 'C', 'D'].forEach(function(letter) {
+                                html += '<option value="' + grade + letter + '">' + grade + letter + ' 班</option>';
+                            });
+                        }
+                        document.write(html);
+                    })();
+                </script>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="loginSeat">🔢 請選取您的學號：</label>
+            <select id="loginSeat">
+                <script>
+                    (function() {
+                        var html = "";
+                        for (var i = 1; i <= 35; i++) {
+                            html += '<option value="' + i + '">' + i + ' 號</option>';
+                        }
+                        document.write(html);
+                    })();
+                </script>
+            </select>
+        </div>
+        <button id="loginSubmitBtn" onclick="loginStudent()" style="background-color: var(--primary); font-size: 18px; margin-top: 10px;">雲端互通登入 🚀</button>
+    </div>
+
+    <div id="step1" class="step-panel">
+        <h2 id="welcomeText" style="color: var(--success);">歡迎前來學習！</h2>
+        <div class="mode-selection-box">
+            <div class="mode-card" onclick="switchSetupConfig('CHALLENGE')">
+                <h3>🎮 智能闖關模式</h3>
+                <p>自由選擇「化簡」或「展開」關卡，自動生成各式組合、計分與原地補答修正！</p>
+            </div>
+            <div class="mode-card" onclick="switchSetupConfig('SOLVER')">
+                <h3>🛠️ 智能解答逐步教學</h3>
+                <p>手動輸入任何化簡式或乘法算式，系統將智慧辨識並提供專屬的破譯解說！</p>
+            </div>
+            <div id="reviewModeCard" class="mode-card disabled" onclick="switchSetupConfig('REVIEW')">
+                <h3>📘 錯題溫習模式<span id="reviewBadge" class="badge-count" style="display:none;">0</span></h3>
+                <p>針對您當前核心模組答錯的魔王題進行重溫，答對即可從錯題本消滅！</p>
+            </div>
+            <div class="mode-card" onclick="switchSetupConfig('STATS')" style="border-color: var(--info);">
+                <h3>📊 學習歷程數據</h3>
+                <p>隨機查詢與統計各題型的答對率、錯題清單，支援直接匯出 PDF 報告！</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="step1_challenge" class="step-panel">
+        <h2>🎮 闖關模式設定</h2>
+        <div class="form-group">
+            <label>🧭 請選取挑戰的代數核心機制：</label>
+            <div class="radio-group" style="background:#e0f2fe;">
+                <label class="radio-option">
+                    <input type="radio" name="gameEngine" value="SIMPLIFY" checked onchange="onGameEngineChange()"> 🔮 1. 多項式隨機變數化簡機 (加減法)
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="gameEngine" value="MULTIPLY" onchange="onGameEngineChange()"> 📐 2. 多項式田字魔法展開機 (乘法)
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="typeSelect">🎯 請選取挑戰的子題型結構：</label>
+            <select id="typeSelect">
+                </select>
+        </div>
+
+        <div class="form-group">
+            <label>終點條件機制：</label>
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" name="endCondition" value="COUNT" checked onchange="toggleConditionUI()"> 固定題數模式
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="endCondition" value="TARGET_SCORE" onchange="toggleConditionUI()"> 特定積分模式 (直到達標)
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group" id="countInputWrapper">
+            <label for="totalQuestionsInput">🔢 請設定挑戰題數：</label>
+            <input type="number" id="totalQuestionsInput" value="5" min="1" max="20">
+        </div>
+        <div class="form-group" id="targetScoreInputWrapper" style="display: none;">
+            <label for="targetScoreInput">🏆 請設定目標達標分數（答對+1，答錯-1）：</label>
+            <input type="number" id="targetScoreInput" value="5" min="1" max="50">
+        </div>
+
+        <button onclick="initChallengeSession()" style="background-color: var(--success); font-size: 18px;">🎲 建立關卡，出發！</button>
+    </div>
+
+    <div id="step1_solver" class="step-panel">
+        <h2>🛠️ 智能解答模式（智慧相容出題）</h2>
+        <div class="supported-types">
+            <strong>💡 系統會自動辨識輸入的結構，支援任意英文字母變數組合：</strong><br>
+            • <b>輸入化簡題(加減法)</b>：例如 <code>(3a+5)+(2a-3)</code> 或 <code>(5x-2y)-(x+3y)</code><br>
+            • <b>輸入展開題(乘法)</b>：例如 <code>(x+2)(x-3)</code>、<code>3x(2x-5)</code> 或 <code>(2a-1)(3a+4)</code>
+        </div>
+        <div class="form-group">
+            <label for="eqInput">✏️ 請輸入多項式算式：</label>
+            <input type="text" id="eqInput" placeholder="例如：(3m + 2n) - (5m - n) 或 (x+2)(x-3)">
+        </div>
+        <button onclick="handleManualSolverInput()" style="font-size: 18px;">開始逐步教學引導</button>
+    </div>
+
+    <div id="step2" class="step-panel">
+        <div class="progress-banner">
+            <span id="progressText">進度：載入中...</span>
+            <div class="banner-right-zone">
+                <span id="typeBadgeText" class="type-badge" style="display:none;">類型：-</span>
+                <span id="scoreText" class="score-badge">目前積分：0 分</span>
+            </div>
+        </div>
+        <h2 id="step2Title">請計算化簡以下多項式</h2>
+        <div class="stage-box" id="displayEq">題目載入中...</div>
+        <div class="form-group">
+            <label for="ansInput" id="inputLabel">你的最終化簡展開結果（請用 ^2 代表平方，係數 1 可省略）：</label>
+            <input type="text" id="ansInput" placeholder="輸入解答，例如: 2x+5 或 x^2-x-6">
+        </div>
+        <div id="initialFeedbackArea"></div> 
+        <button id="submitAnsBtn" onclick="checkFirstAnswer()">提交結果並驗證</button>
+    </div>
+
+    <div id="step3" class="step-panel">
+        <div class="progress-banner">
+            <span id="progressTextStage3">進度：載入中...</span>
+            <div class="banner-right-zone">
+                <span id="typeBadgeTextStage3" class="type-badge" style="display:none;">類型：-</span>
+                <span style="color: var(--danger);" id="modeStatusLabel">💡 破譯程序中</span>
+            </div>
+        </div>
+        <h2 id="step3HeadingTitle">多項式逐步分解思維</h2>
+        
+        <div class="stage-box" id="interactiveStageBox">魔法展示台</div>
+        <div id="feedbackArea" class="feedback"></div>
+        <button id="solveBtn" onclick="startInteractiveSolving()">🔮 啟動代數思維逐步破譯</button>
+
+        <div id="teachingZone" class="teaching-row" style="display: none;">
+            <div class="teaching-column">
+                <h3>🛠2️ 逐步動態操作</h3>
+                
+                <div id="multiplyGridArea" style="display:none;">
+                    <div class="block-form">
+                        <label><strong>第一步：田字魔法陣（分配律乘積）</strong></label>
+                        <p style="color: #4f46e5; font-size:13px; margin: 0 0 5px 0;">💡 提示：除了首項，正數項項目<b>必須填寫出「+」號</b>（如 <code>+15x</code>）。</p>
+                        <div id="magicGridTable" class="grid-table">
+                            <div class="grid-cell grid-header" style="background:none; border:none;"></div>
+                            <div id="g-h1" class="grid-cell grid-header">2x</div>
+                            <div id="g-h2" class="grid-cell grid-header">+5</div>
+                            
+                            <div id="g-v1" class="grid-cell grid-header row-one-item">3x</div>
+                            <div class="row-one-item"><input type="text" id="cell-0-0" class="grid-input" placeholder="左上"></div>
+                            <div class="row-one-item"><input type="text" id="cell-0-1" class="grid-input" placeholder="右上"></div>
+                            
+                            <div id="g-v2" class="grid-cell grid-header row-two-item">+4</div>
+                            <div class="row-two-item"><input type="text" id="cell-1-0" class="grid-input" placeholder="左下"></div>
+                            <div class="row-two-item"><input type="text" id="cell-1-1" class="grid-input" placeholder="右下"></div>
+                        </div>
+                        <button onclick="executeUnbracketStageMultiply()">確認田字格數值</button>
+                    </div>
+                </div>
+
+                <div id="simplifyUnbracketArea" style="display:none;">
+                    <div class="block-form">
+                        <label><strong>第一步：解開束縛（去括號）</strong></label>
+                        <p style="color: #666; font-size:13px; margin: 0 0 5px 0;">💡 提示：遇到負號分配律時，後半段括號內各項都要記得變號喔！</p>
+                        <label for="unbracketInput"><b>請輸入去括號後的完整串聯式：</b></label>
+                        <input type="text" id="unbracketInput" placeholder="例如: 3a+5-2a+3">
+                        <button onclick="executeUnbracketStageSimplify()">確認去括號結果</button>
+                    </div>
+                </div>
+
+                <div id="interactiveStage2" style="display: none;">
+                    <p id="stage2Text"><strong>第二步：同類歸宗（係數合併算式）</strong></p>
+                    <p style="color: #4f46e5; font-size:13px; margin-bottom: 10px;">💡 重要提示：此處要填入<b>係數加減的過程算式</b>（例如填寫：<code>15+8</code>），不要直接寫最終答案喔！</p>
+                    <div id="combineFormGroup" class="block-form"></div>
+                    <button style="margin-top:15px;" onclick="executeCombineStage()">確認係數算式</button>
+                </div>
+
+                <div id="interactiveStage3" style="display: none;">
+                    <div class="block-form">
+                        <p><strong>第三步：代數集成（宣佈最終結果）</strong></p>
+                        <label for="finalAnsInput" id="stage3Text">請串聯最終的最簡多項式結果：</label>
+                        <input type="text" id="finalAnsInput" placeholder="例如: 6x^2+23x+20">
+                        <button onclick="executeFinal()">宣告最終結果</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="teaching-column">
+                <h3>📝 多項式黑板解題步驟</h3>
+                <div class="math-step-box" id="mathStepBox"></div>
+            </div>
+        </div>
+        
+        <button id="nextBtn" class="btn-success" onclick="advanceQuestion()" style="display:none; margin-top:20px;">前進下一題 ➡️</button>
+    </div>
+
+    <div id="step_stats_panel" class="step-panel">
+        <h2>📊 學生學習歷程歷程數據分析</h2>
+        <p class="non-print" style="color:#666; font-size:14px; text-align:center;" id="statsDescLabel">數據統計加載中...</p>
+        
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>多項式題型結構</th>
+                    <th>總挑戰次數</th>
+                    <th>一擊必殺 (首答對)</th>
+                    <th>原地挽回 (補答對)</th>
+                    <th>啟動破譯/失敗</th>
+                    <th>首發正確率</th>
+                    <th>綜合通關率</th>
+                </tr>
+            </thead>
+            <tbody id="statsTableBody"></tbody>
+        </table>
+
+        <div style="margin-top: 30px;">
+            <h3>📘 當前核心未消滅錯題清單 (<span id="statsWrongCount">0</span> 題)</h3>
+            <div id="statsWrongList" style="background: #f8fafc; padding:15px; border-radius:8px; border:1px solid #cbd5e1; font-family:monospace; font-size:16px; line-height:1.6;">
+                暫無錯題，表現優異！
+            </div>
+        </div>
+
+        <div class="btn-group non-print">
+            <button class="btn-info" onclick="exportToPDF()">🖨️ 匯出 PDF 學習報告</button>
+            <button class="btn-secondary" onclick="resetToMainMenu(false)" style="margin-top:0;">↩️ 返回主選單</button>
+        </div>
+    </div>
+
+    <div class="print-footer">
+        <p>代數大師：多項式完全體整合系統 © 2026 數位教學歷程系統</p>
+    </div>
+</div>
+
+<script>
+    // =========================================================================
+    // 🔗 雲端通用後端對接與基礎變數
+    // =========================================================================
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwIK7Mqd4WEDpbuZR-PDt4pq-8EkZ74POUDDe9WgxZA_5QqPvIBdGdD2jVFjsVOZRIj/exec";
+
+    let currentEngine = "SIMPLIFY"; // "SIMPLIFY" 或 "MULTIPLY"
+    let userRawClass = "";
+    let userRawSeat = "";
+    let currentUserKey = ""; 
+    
+    // 分流存儲各核心數據
+    let cacheStorage = {
+        SIMPLIFY: { wrongBook: [], stats: getInitialStatsObject("SIMPLIFY") },
+        MULTIPLY: { wrongBook: [], stats: getInitialStatsObject("MULTIPLY") }
+    };
+
+    function getInitialStatsObject(engine) {
+        if (engine === "SIMPLIFY") {
+            return {
+                1: { name: "(ax + b) + (cx + d) 【單變數加法】", total: 0, firstMatch: 0, retryMatch: 0, failed: 0 },
+                2: { name: "(ax + by) + (cx + dy) 【雙變數加法】", total: 0, firstMatch: 0, retryMatch: 0, failed: 0 },
+                3: { name: "(ax + b) - (cx + d) 【單變數減法】", total: 0, firstMatch: 0, retryMatch: 0, failed: 0 },
+                4: { name: "(ax + by) - (cx + dy) 【雙變數減法】", total: 0, firstMatch: 0, retryMatch: 0, failed: 0 }
+            };
+        } else {
+            return {
+                1: { name: "(ax + b)(cx + d) 【全正數型】", total: 0, firstMatch: 0, retryMatch: 0, failed: 0 },
+                2: { name: "(ax - b)(cx + d) 【單項負數型】", total: 0, firstMatch: 0, retryMatch: 0, failed: 0 },
+                3: { name: "(ax - b)(cx - d) 【雙常數負數型】", total: 0, firstMatch: 0, retryMatch: 0, failed: 0 },
+                4: { name: "單項式乘以多項式 【常數或單項型】", total: 0, firstMatch: 0, retryMatch: 0, failed: 0 }
+            };
+        }
+    }
+
+    function toggleOverlay(show, text="雲端通訊中...") {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            document.getElementById('loadingText').innerText = text;
+            overlay.style.display = show ? 'flex' : 'none';
+        }
+    }
+
+    // 👤 雙軌數據庫異地互通抓取
+    function loginStudent() {
+        userRawClass = document.getElementById('loginClass').value;
+        userRawSeat = document.getElementById('loginSeat').value;
+        
+        toggleOverlay(true, `正在連結試算表，同步您的雙模組代數進度...`);
+        
+        // 抓取第一個引擎：化簡
+        let keySim = `Simplify_${userRawClass}-${userRawSeat}`;
+        // 抓取第二個引擎：展開
+        let keyMul = `PolyMulti_${userRawClass}-${userRawSeat}`;
+
+        Promise.all([
+            fetch(GAS_API_URL + "?jsonData=" + encodeURIComponent(JSON.stringify({ action: "load", userKey: keySim }))).then(r => r.json()).catch(()=>null),
+            fetch(GAS_API_URL + "?jsonData=" + encodeURIComponent(JSON.stringify({ action: "load", userKey: keyMul }))).then(r => r.json()).catch(()=>null)
+        ]).then(([dataSim, dataMul]) => {
+            // 處理化簡數據
+            if(dataSim && dataSim.success && dataSim.stats && dataSim.stats["1"]) {
+                cacheStorage.SIMPLIFY.wrongBook = dataSim.wrongBook || [];
+                cacheStorage.SIMPLIFY.stats = dataSim.stats;
+            } else { initFallbackData("SIMPLIFY", keySim); }
+
+            // 處理展開數據
+            if(dataMul && dataMul.success && dataMul.stats && dataMul.stats["1"]) {
+                cacheStorage.MULTIPLY.wrongBook = dataMul.wrongBook || [];
+                cacheStorage.MULTIPLY.stats = dataMul.stats;
+            } else { initFallbackData("MULTIPLY", keyMul); }
+
+            // 將最新載入成果存至本機快取
+            localStorage.setItem(`CombinedPolyCache_Sim_${userRawClass}-${userRawSeat}`, JSON.stringify(cacheStorage.SIMPLIFY));
+            localStorage.setItem(`CombinedPolyCache_Mul_${userRawClass}-${userRawSeat}`, JSON.stringify(cacheStorage.MULTIPLY));
+
+            toggleOverlay(false);
+            enterMainMenu();
+        });
+    }
+
+    function initFallbackData(engine, key) {
+        let localKey = engine === "SIMPLIFY" ? `CombinedPolyCache_Sim_${userRawClass}-${userRawSeat}` : `CombinedPolyCache_Mul_${userRawClass}-${userRawSeat}`;
+        let cached = localStorage.getItem(localKey);
+        if(cached) {
+            let parsed = JSON.parse(cached);
+            if(parsed.stats && parsed.stats["1"]) {
+                cacheStorage[engine] = parsed;
+                return;
+            }
+        }
+        cacheStorage[engine].wrongBook = [];
+        cacheStorage[engine].stats = getInitialStatsObject(engine);
+    }
+
+    function enterMainMenu() {
+        document.getElementById('welcomeText').innerText = `👋 歡迎連線！ ${userRawClass} 班 ${userRawSeat} 號 同學`;
+        document.getElementById('globalLogoutBtn').style.display = "inline-block";
+        updateReviewMenuUI();
+        showPanel('step1');
+    }
+
+    function cloudSaveData() {
+        if (!userRawClass || !userRawSeat) return;
+        
+        let engineKey = currentEngine === "SIMPLIFY" ? `Simplify_${userRawClass}-${userRawSeat}` : `PolyMulti_${userRawClass}-${userRawSeat}`;
+        let localKey = currentEngine === "SIMPLIFY" ? `CombinedPolyCache_Sim_${userRawClass}-${userRawSeat}` : `CombinedPolyCache_Mul_${userRawClass}-${userRawSeat}`;
+        
+        localStorage.setItem(localKey, JSON.stringify(cacheStorage[currentEngine]));
+
+        var payload = {
+            action: "save",
+            userKey: engineKey,
+            stats: cacheStorage[currentEngine].stats,
+            wrongBook: cacheStorage[currentEngine].wrongBook
+        };
+
+        fetch(GAS_API_URL, {
+            method: "POST",
+            mode: "no-cors", 
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "jsonData=" + encodeURIComponent(JSON.stringify(payload))
+        });
+    }
+
+    function logoutStudent() {
+        if(confirm("確定要切換帳號嗎？資料皆已上傳雲端安全同步。")) {
+            userRawClass = ""; userRawSeat = ""; currentUserKey = "";
+            document.getElementById('globalLogoutBtn').style.display = "none";
+            document.getElementById('globalHomeBtn').style.display = "none";
+            showPanel('step0_login');
+        }
+    }
+
+    // =========================================================================
+    // 核心代數運行模組 (架構融合控制)
+    // =========================================================================
+    let session = {
+        currentMode: 'CHALLENGE', endCondition: 'COUNT', totalQuestions: 5, targetScore: 5,
+        currentIdx: 0, score: 0, selectedType: 'MIX', questionList: [], currentTypeNum: 1,
+        wrongAttemptsThisQuestion: 0, hasAddedToWrongBookThisQuestion: false 
+    };
+
+    // 化簡與展開通用內部變數暫存器
+    let polyData = {
+        engine: 'SIMPLIFY', a:0, b:0, c:0, d:0, e:0, f:0, sign:'+', v1:'x', v2:'y',
+        targetVarType: 'v1_c', ansStr: '', isSingleTerm: false, singleType: "pure_constant",
+        cells: {}, step2_formula: ""
+    };
+
+    const varPool = [
+        {v1: 'x', v2: 'y'}, {v1: 'a', v2: 'b'}, {v1: 'c', v2: 'd'},
+        {v1: 'm', v2: 'n'}, {v1: 'p', v2: 'q'}, {v1: 's', v2: 't'}
+    ];
+
+    function updateReviewMenuUI() {
+        let wrongCount = cacheStorage[currentEngine].wrongBook.length;
+        const card = document.getElementById('reviewModeCard');
+        const badge = document.getElementById('reviewBadge');
+        if (wrongCount > 0) {
+            card.classList.remove('disabled'); badge.style.display = 'inline-block'; badge.innerText = wrongCount;
+        } else {
+            card.classList.add('disabled'); badge.style.display = 'none';
+        }
+    }
+
+    function showPanel(id) {
+        document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('globalHomeBtn').style.display = (id === 'step1' || id === 'step0_login') ? 'none' : 'inline-block';
+    }
+
+    function onGameEngineChange() {
+        currentEngine = document.querySelector('input[name="gameEngine"]:checked').value;
+        renderTypeSelectOptions();
+    }
+
+    function renderTypeSelectOptions() {
+        const select = document.getElementById('typeSelect');
+        select.innerHTML = '';
+        if (currentEngine === 'SIMPLIFY') {
+            select.innerHTML = `
+                <option value="1">1. (ax + b) + (cx + d) 【單變數加法】</option>
+                <option value="2">2. (ax + by) + (cx + dy) 【雙變數加法】</option>
+                <option value="3">3. (ax + b) - (cx + d) 【單變數減法（注意變號）】</option>
+                <option value="4">4. (ax + by) - (cx + dy) 【雙變數減法（注意變號）】</option>
+                <option value="MIX" selected>5. 🔀 隨機變數與題型全面大混戰</option>
+            `;
+        } else {
+            select.innerHTML = `
+                <option value="1">1. (ax + b)(cx + d) 【全正數型】</option>
+                <option value="2">2. (ax - b)(cx + d) 【單項負數型】</option>
+                <option value="3">3. (ax - b)(cx - d) 【雙常數負數型】</option>
+                <option value="4">4. 單項式乘以多項式 【常數或單項型】</option>
+                <option value="MIX" selected>5. 🔀 隨機正負與多元題型大混戰</option>
+            `;
+        }
+    }
+
+    function switchSetupConfig(mode) {
+        session.currentMode = mode;
+        if (mode === 'CHALLENGE') {
+            renderTypeSelectOptions();
+            showPanel('step1_challenge');
+        } else if (mode === 'SOLVER') {
+            showPanel('step1_solver');
+        } else if (mode === 'REVIEW') {
+            if (cacheStorage[currentEngine].wrongBook.length === 0) return;
+            initReviewSession();
+        } else if (mode === 'STATS') {
+            calculateAndRenderStats();
+            showPanel('step_stats_panel');
+        }
+    }
+
+    function toggleConditionUI() {
+        let condition = document.querySelector('input[name="endCondition"]:checked').value;
+        document.getElementById('countInputWrapper').style.display = (condition === 'COUNT') ? 'block' : 'none';
+        document.getElementById('targetScoreInputWrapper').style.display = (condition === 'COUNT') ? 'none' : 'block';
+    }
+
+    // =========================================================================
+    // 🎲 雙核心題目自動產生器
+    // =========================================================================
+    function generateQuestion(engine, typeCode) {
+        let t = typeCode === 'MIX' ? ['1','2','3','4'][Math.floor(Math.random() * 4)] : typeCode;
+        let randCoeff = () => { let r = Math.floor(Math.random() * 13) - 6; return r === 0 ? 2 : r; };
+        let randPos = () => Math.floor(Math.random() * 5) + 2; 
+        let randNeg = () => -(Math.floor(Math.random() * 5) + 2); 
+        let randAny = () => Math.random() > 0.5 ? randPos() : randNeg();
+
+        let vSet = varPool[Math.floor(Math.random() * varPool.length)];
+        session.currentTypeNum = parseInt(t);
+
+        if (engine === 'SIMPLIFY') {
+            let a = randCoeff(), b = randCoeff(), c = randCoeff(), d = randCoeff();
+            if (t === '1') return `(${fmt(a)}${vSet.v1}${fmtSign(b)})+(${fmt(c)}${vSet.v1}${fmtSign(d)})`;
+            if (t === '2') return `(${fmt(a)}${vSet.v1}${fmtSign(b)}${vSet.v2})+(${fmt(c)}${vSet.v1}${fmtSign(d)}${vSet.v2})`;
+            if (t === '3') return `(${fmt(a)}${vSet.v1}${fmtSign(b)})-(${fmt(c)}${vSet.v1}${fmtSign(d)})`;
+            if (t === '4') return `(${fmt(a)}${vSet.v1}${fmtSign(b)}${vSet.v2})-(${fmt(c)}${vSet.v1}${fmtSign(d)}${vSet.v2})`;
+        } else {
+            let a = randPos(), b = 0, c = randPos(), d = 0;
+            let v = vSet.v1;
+            if (t === '1') { b = randPos(); d = randPos(); return `(${fmt(a)}${v}${fmtSign(b)})(${fmt(c)}${v}${fmtSign(d)})`; }
+            if (t === '2') { b = randNeg(); d = randPos(); return `(${fmt(a)}${v}${fmtSign(b)})(${fmt(c)}${v}${fmtSign(d)})`; }
+            if (t === '3') { b = randNeg(); d = randNeg(); return `(${fmt(a)}${v}${fmtSign(b)})(${fmt(c)}${v}${fmtSign(d)})`; }
+            if (t === '4') {
+                let innerC = randAny(), innerD = randAny(); 
+                if(Math.random() > 0.5) {
+                    return `${randAny()}(${fmt(innerC)}${v}${fmtSign(innerD)})`;
+                } else {
+                    return `(${fmt(randAny())}${v})(${fmt(innerC)}${v}${fmtSign(innerD)})`;
+                }
+            }
+        }
+    }
+
+    function fmt(val) { return val === 1 ? '' : (val === -1 ? '-' : val); }
+    function fmtSign(val) { return val >= 0 ? '+' + val : val; }
+
+    function initChallengeSession() {
+        session.endCondition = document.querySelector('input[name="endCondition"]:checked').value;
+        session.selectedType = document.getElementById('typeSelect').value;
+        session.currentIdx = 0; session.score = 0; session.questionList = [];
+        if (session.endCondition === 'COUNT') {
+            session.totalQuestions = parseInt(document.getElementById('totalQuestionsInput').value);
+            for (let i = 0; i < session.totalQuestions; i++) session.questionList.push(generateQuestion(currentEngine, session.selectedType));
+        } else {
+            session.targetScore = parseInt(document.getElementById('targetScoreInput').value);
+            session.questionList.push(generateQuestion(currentEngine, session.selectedType));
+        }
+        loadPolynomialToStage();
+    }
+
+    function initReviewSession() {
+        session.currentIdx = 0; session.totalQuestions = cacheStorage[currentEngine].wrongBook.length;
+        session.questionList = [...cacheStorage[currentEngine].wrongBook]; loadPolynomialToStage();
+    }
+
+    // =========================================================================
+    // 🛠️ 雙軌相容核心代數解析器 (智慧型解算核心)
+    // =========================================================================
+    function handleManualSolverInput() {
+        let input = document.getElementById('eqInput').value.replace(/\s+/g, '');
+        if(!input) { alert('請輸入多項式算式！'); return; }
+        
+        // 🔮 智慧引擎判定路由
+        if (input.includes(')(') || (/^[+-]?\d*[a-zA-Z]?\(/.test(input) && !input.includes(')+(') && !input.includes(')-('))) {
+            currentEngine = 'MULTIPLY';
+        } else {
+            currentEngine = 'SIMPLIFY';
+        }
+
+        session.totalQuestions = 1; session.currentIdx = 0; session.questionList = [input];
+        loadPolynomialToStage();
+    }
+
+    function parseMathStructure(str) {
+        let letters = str.replace(/[^a-zA-Z]/g, ''); 
+        if(letters.length === 0) { alert("找不到英文字母變數！請檢查算式格式。"); return false; }
+        let uniqueLetters = [...new Set(letters)];
+        
+        polyData.engine = currentEngine;
+
+        if (currentEngine === 'SIMPLIFY') {
+            // 解析化簡算式
+            polyData.v1 = uniqueLetters[0]; 
+            polyData.v2 = uniqueLetters[1] ? uniqueLetters[1] : 'y'; 
+            polyData.targetVarType = uniqueLetters.length > 1 ? 'v1_v2' : 'v1_c';
+
+            let regex = polyData.targetVarType === 'v1_v2' ? 
+                new RegExp(`^\\(([+-]?\\d*)${polyData.v1}([+-]?\\d*)${polyData.v2}\\)([+-])\\(([+-]?\\d*)${polyData.v1}([+-]?\\d*)${polyData.v2}\\)$`) :
+                new RegExp(`^\\(([+-]?\\d*)${polyData.v1}([+-]?\\d+)?\\)([+-])\\(([+-]?\\d*)${polyData.v1}([+-]?\\d+)?\\)$`);
+            
+            const m = str.match(regex); 
+            if(!m) { alert("加減法結構不相符！格式範例：(3a+2b)-(5a-b)"); return false; }
+            
+            polyData.a = m[1]===""||m[1]==="+"?1:(m[1]==="-"?-1:parseInt(m[1]));
+            let val2 = m[2] ? (m[2]==="+"?1:(m[2]==="-"?-1:parseInt(m[2]))) : 0;
+            polyData.sign = m[3];
+            polyData.c = m[4]===""||m[4]==="+"?1:(m[4]==="-"?-1:parseInt(m[4]));
+            let val5 = m[5] ? (m[5]==="+"?1:(m[5]==="-"?-1:parseInt(m[5]))) : 0;
+
+            if(polyData.targetVarType === 'v1_v2') { polyData.b = val2; polyData.e = 0; polyData.d = val5; polyData.f = 0; }
+            else { polyData.b = 0; polyData.e = val2; polyData.d = 0; polyData.f = val5; }
+
+            let fV1 = polyData.sign === '+' ? (polyData.a + polyData.c) : (polyData.a - polyData.c);
+            let fV2 = polyData.sign === '+' ? (polyData.b + polyData.d) : (polyData.b - polyData.d);
+            let fC  = polyData.sign === '+' ? (polyData.e + polyData.f) : (polyData.e - polyData.f);
+
+            let res = "";
+            if(fV1 !== 0) res += `${fV1 === 1 ? '' : (fV1 === -1 ? '-' : fV1)}${polyData.v1}`;
+            if(polyData.targetVarType === 'v1_v2') { 
+                if(fV2 !== 0) res += `${fV2 > 0 ? (res===''?'':'+') : ''}${fV2 === 1 ? '' : (fV2 === -1 ? '-' : fV2)}${polyData.v2}`; 
+            } else { 
+                if(fC !== 0) res += `${fC > 0 ? (res===''?'':'+') : ''}${fC}`; 
+            }
+            polyData.ansStr = res === "" ? "0" : res;
+        } 
+        else {
+            // 解析展開(乘法)算式
+            polyData.v1 = uniqueLetters[0];
+            polyData.isSingleTerm = false;
+            let s = str.replace(new RegExp(`\\(([+-]?\\d*${polyData.v1})\\)\\((.*)\\)`), '$1($2)');
+
+            let reDouble = new RegExp(`^\\(([+-]?\\d*)${polyData.v1}([+-]?\\d+)\\)\\(([+-]?\\d*)${polyData.v1}([+-]?\\d+)\\)$`);
+            let reSingle = new RegExp(`^([+-]?\\d*)(${polyData.v1})?\\(([+-]?\\d*)${polyData.v1}([+-]?\\d+)\\)$`);
+
+            let m = s.match(reDouble);
+            if (m) {
+                polyData.a = m[1]===""||m[1]==="+" ? 1 : (m[1]==="-" ? -1 : parseInt(m[1]));
+                polyData.b = parseInt(m[2]);
+                polyData.c = m[3]===""||m[3]==="+" ? 1 : (m[3]==="-" ? -1 : parseInt(m[3]));
+                polyData.d = parseInt(m[4]);
+            } else {
+                m = s.match(reSingle);
+                if (m) {
+                    let leadCoef = m[1]===""||m[1]==="+" ? 1 : (m[1]==="-" ? -1 : parseInt(m[1]));
+                    let hasVar = m[2] !== undefined; 
+                    if (hasVar) { polyData.a = leadCoef; polyData.b = 0; polyData.singleType = "pure_variable"; } 
+                    else { polyData.a = 0; polyData.b = leadCoef; polyData.singleType = "pure_constant"; }
+                    polyData.c = m[3]===""||m[3]==="+" ? 1 : (m[3]==="-" ? -1 : parseInt(m[3]));
+                    polyData.d = parseInt(m[4]);
+                    polyData.isSingleTerm = true;
+                } else {
+                    alert("不支援此多項式展開結構！範例：(x+2)(x-3) 或 3(x+5)");
+                    return false;
+                }
+            }
+            let c00 = polyData.a * polyData.c; let c01 = polyData.a * polyData.d;
+            let c10 = polyData.b * polyData.c; let c11 = polyData.b * polyData.d;
+
+            polyData.cells = {
+                "0-0": c00 === 0 ? "0" : `${c00}${polyData.v1}^2`,
+                "0-1": c01 === 0 ? "0" : `${fmtSign(c01)}${polyData.v1}`,
+                "1-0": c10 === 0 ? "0" : `${fmtSign(c10)}${polyData.v1}`,
+                "1-1": c11 === 0 ? "0" : `${fmtSign(c11)}`
+            };
+            polyData.step2_formula = `${c01}${fmtSign(c10)}`;
+
+            let fX2 = c00; let fX = c01 + c10; let fC = c11;
+            let res = "";
+            if (fX2 !== 0) res += `${fX2}${polyData.v1}^2`;
+            if (fX !== 0) res += fX > 0 && res !== "" ? `+${fX}${polyData.v1}` : `${fX}${polyData.v1}`;
+            if (fC !== 0) res += fC > 0 && res !== "" ? `+${fC}` : `${fC}`;
+            polyData.ansStr = res === "" ? "0" : res;
+        }
+        return true;
+    }
+
+    function canonicalizePolyStr(userStr, mainVar) {
+        let clean = userStr.replace(/\s+/g, '').toLowerCase().replace(/^\+/, '');
+        clean = clean.replace(new RegExp(`([+-])1${mainVar}\\^2`, 'g'), `$1${mainVar}^2`);
+        if(clean.startsWith(`1${mainVar}^2`)) clean = clean.substring(1);
+        clean = clean.replace(new RegExp(`([+-])1${mainVar}([^\\^]|$)`, 'g'), `$1${mainVar}$2`);
+        if(clean.startsWith(`1${mainVar}`) && !clean.startsWith(`1${mainVar}^2`)) clean = clean.substring(1);
+        return clean;
+    }
+
+    function loadPolynomialToStage() {
+        session.wrongAttemptsThisQuestion = 0; session.hasAddedToWrongBookThisQuestion = false;
+        document.getElementById('initialFeedbackArea').innerHTML = '';
+        document.getElementById('submitAnsBtn').innerText = "提交結果並驗證";
+        document.getElementById('submitAnsBtn').className = "";
+        
+        let currentExpr = session.questionList[session.currentIdx]; 
+        if(!parseMathStructure(currentExpr)) return;
+
+        if(session.currentMode === 'CHALLENGE') {
+            cacheStorage[currentEngine].stats[session.currentTypeNum].total++;
+            cloudSaveData(); 
+        }
+
+        let progBannerText = "";
+        let titleText = currentEngine === 'SIMPLIFY' ? "請化簡以下多項式式子" : "請展開化簡以下多項式乘積";
+        document.getElementById('step2Title').innerText = (session.currentMode === 'REVIEW') ? "👹 魔王錯題重溫挑戰" : titleText;
+
+        if (session.currentMode === 'CHALLENGE') {
+            progBannerText = (session.endCondition === 'COUNT') ? `進度：第 ${session.currentIdx + 1} / ${session.totalQuestions} 題` : `積分達標模式：第 ${session.currentIdx + 1} 題 (🎯 目標: ${session.targetScore} 分)`;
+            document.getElementById('typeBadgeText').innerText = `當前變數：${polyData.v1}${currentEngine==='SIMPLIFY'&&polyData.targetVarType==='v1_v2'?','+polyData.v2:''}`;
+            document.getElementById('typeBadgeText').style.display = "inline-block";
+            document.getElementById('scoreText').innerText = `目前積分：${session.score} 分`;
+            document.getElementById('scoreText').style.display = "inline-block";
+        } else if (session.currentMode === 'REVIEW') {
+            progBannerText = `📘 錯題重溫中：第 ${session.currentIdx + 1} / ${session.totalQuestions} 題`;
+            document.getElementById('scoreText').style.display = "none";
+        } else {
+            progBannerText = `🛠️ 智慧型雙相容多項式逐步解答模式`; document.getElementById('scoreText').style.display = "none";
+        }
+
+        document.getElementById('progressText').innerText = progBannerText;
+        document.getElementById('ansInput').value = ''; 
+        document.getElementById('displayEq').innerText = currentExpr;
+        showPanel('step2');
+    }
+
+    // =========================================================================
+    // 🎛️ 答案驗證與回饋控制核心
+    // =========================================================================
+    function checkFirstAnswer() {
+        let userAns = document.getElementById('ansInput').value;
+        if(!userAns.trim()) { alert('答案不可以留白喔！'); return; }
+        
+        let normUser = canonicalizePolyStr(userAns, polyData.v1);
+        let normTarget = canonicalizePolyStr(polyData.ansStr, polyData.v1);
+
+        if (normUser === normTarget) {
+            if (session.currentMode === 'CHALLENGE' && session.wrongAttemptsThisQuestion === 0) {
+                cacheStorage[currentEngine].stats[session.currentTypeNum].firstMatch++; cloudSaveData();
+            }
+            showPanel('step3'); executeDirectSuccess();
+        } else {
+            session.wrongAttemptsThisQuestion++;
+            if (session.currentMode === 'CHALLENGE' && !session.hasAddedToWrongBookThisQuestion) {
+                let currentExpr = session.questionList[session.currentIdx];
+                if (!cacheStorage[currentEngine].wrongBook.includes(currentExpr)) cacheStorage[currentEngine].wrongBook.push(currentExpr);
+                session.hasAddedToWrongBookThisQuestion = true;
+                cacheStorage[currentEngine].stats[session.currentTypeNum].failed++; cloudSaveData();
+            }
+            if (session.currentMode === 'CHALLENGE' && session.wrongAttemptsThisQuestion === 1) {
+                session.score -= 1; document.getElementById('scoreText').innerText = `目前積分：${session.score} 分`;
+                document.getElementById('initialFeedbackArea').className = "feedback warning";
+                document.getElementById('initialFeedbackArea').innerHTML = `❌ 計算結果不吻合！<b>積分 -1 分！</b><br>別沮喪，提供你一次<b>原地補答修正的挽回機會</b>！`;
+                document.getElementById('submitAnsBtn').innerText = "重新檢查並提交補答"; document.getElementById('submitAnsBtn').className = "btn-warning";
+            } else {
+                if (session.currentMode === 'CHALLENGE') { session.score -= 1; document.getElementById('scoreText').innerText = `目前積分：${session.score} 分`; }
+                showPanel('step3'); executeFinalFailure();
+            }
+        }
+    }
+
+    function executeDirectSuccess() {
+        document.getElementById('interactiveStageBox').innerHTML = `最簡代數式結果：<span style="color:#fffb00;">${polyData.ansStr}</span> ✨`;
+        const feedback = document.getElementById('feedbackArea');
+        document.getElementById('teachingZone').style.display = "none"; document.getElementById('solveBtn').style.display = "none";
+        document.getElementById('nextBtn').style.display = "block";
+        
+        if(session.currentMode === 'CHALLENGE') {
+            session.score += 1; document.getElementById('scoreText').innerText = `目前積分：${session.score} 分`;
+            if (session.wrongAttemptsThisQuestion === 1) {
+                cacheStorage[currentEngine].stats[session.currentTypeNum].failed--; cacheStorage[currentEngine].stats[session.currentTypeNum].retryMatch++;
+                feedback.innerHTML = `🎉 補答修正完全正確！<span style="color:var(--success);">[補答挽回成功] 積分 +1 分！</span>`;
+            } else {
+                feedback.innerHTML = `🎉 太強了！一擊必殺首發完全正確！<span style="color:var(--success);">[挑戰成功] 積分 +1 分！</span>`;
+            }
+            cloudSaveData();
+        } else if (session.currentMode === 'REVIEW') {
+            let currentExpr = session.questionList[session.currentIdx];
+            cacheStorage[currentEngine].wrongBook = cacheStorage[currentEngine].wrongBook.filter(item => item !== currentExpr);
+            cloudSaveData();
+            feedback.innerHTML = `🎉 戰勝魔王！此題成功從雲端錯題本完全消滅！`;
+        } else { feedback.innerHTML = `🎉 計算完全正確！概念非常紮實。`; }
+        
+        feedback.className = "feedback success"; setupNextButtonLabel();
+    }
+
+    function executeFinalFailure() {
+        document.getElementById('interactiveStageBox').innerText = session.questionList[session.currentIdx];
+        document.getElementById('nextBtn').style.display = "none"; document.getElementById('solveBtn').style.display = "block";
+        document.getElementById('teachingZone').style.display = "none";
+        
+        let txt = session.currentMode === 'CHALLENGE' ? 
+            `❌ 補答仍不吻合。<br><span style="color:var(--danger);">[挑戰失敗] 積分再扣 1 分！</span><br>請點擊下方按鈕啟動代數矩陣逐步引導破譯！` :
+            `❌ 計算有誤。點下方按鈕為您啟動逐步分解思維教學。`;
+        document.getElementById('feedbackArea').innerHTML = txt;
+        document.getElementById('feedbackArea').className = "feedback error";
+    }
+
+    function setupNextButtonLabel() {
+        let nextBtn = document.getElementById('nextBtn');
+        if (session.currentMode === 'CHALLENGE') {
+            nextBtn.innerText = (session.currentIdx < session.questionList.length - 1) ? "前進下一題 ➡️" : "↩️ 挑戰結束，返回主選單";
+        } else if (session.currentMode === 'REVIEW') {
+            nextBtn.innerText = (session.currentIdx === cacheStorage[currentEngine].wrongBook.length - 1 || cacheStorage[currentEngine].wrongBook.length === 0) ? "🏁 結束溫習返回主選單" : "前進下一道魔王題 ➡️";
+        } else { nextBtn.innerText = "↩️ 講解完畢，返回主選單"; }
+    }
+
+    function resetToMainMenu(needConfirm = false) {
+        let confirmLeave = true;
+        if(needConfirm && (session.currentMode === 'CHALLENGE' || session.currentMode === 'REVIEW') && (document.getElementById('step2').classList.contains('active') || document.getElementById('step3').classList.contains('active'))) {
+            confirmLeave = confirm("確定要中止測驗返回主選單嗎？未完結的分數將不予記錄。");
+        }
+        if(confirmLeave) {
+            document.getElementById('nextBtn').style.display = "none"; 
+            document.getElementById('teachingZone').style.display = "none";
+            cloudSaveData(); updateReviewMenuUI(); showPanel('step1');
+        }
+    }
+
+    // =========================================================================
+    // 🔮 逐步解題引導與互動控制核心
+    // =========================================================================
+    function startInteractiveSolving() {
+        document.getElementById('solveBtn').style.display = "none";
+        const zone = document.getElementById('teachingZone');
+        zone.style.display = "flex"; zone.classList.add('animate-fade');
+
+        // 初始化互動面版
+        document.getElementById('interactiveStage2').style.display = "none";
+        document.getElementById('interactiveStage3').style.display = "none";
+
+        if (currentEngine === 'MULTIPLY') {
+            document.getElementById('step3HeadingTitle').innerText = "多項式分配律：田字格區塊思維解讀";
+            document.getElementById('multiplyGridArea').style.display = "block";
+            document.getElementById('simplifyUnbracketArea').style.display = "none";
+            
+            // 填出表頭
+            let gridTable = document.getElementById('magicGridTable');
+            gridTable.style.gridTemplateRows = "repeat(3, 65px)";
+            
+            if (polyData.isSingleTerm) {
+                if (polyData.singleType === "pure_constant") {
+                    document.querySelectorAll('.row-one-item').forEach(el => el.style.display = 'none');
+                    document.querySelectorAll('.row-two-item').forEach(el => el.style.display = 'flex');
+                    gridTable.style.gridTemplateRows = "65px 0px 65px";
+                    document.getElementById('g-v2').innerText = fmtSign(polyData.b);
+                    document.getElementById('cell-0-0').value = "0"; document.getElementById('cell-0-1').value = "0";
+                } else {
+                    document.querySelectorAll('.row-one-item').forEach(el => el.style.display = 'flex');
+                    document.querySelectorAll('.row-two-item').forEach(el => el.style.display = 'none');
+                    gridTable.style.gridTemplateRows = "65px 65px 0px";
+                    document.getElementById('g-v1').innerText = `${fmt(polyData.a)}${polyData.v1}`;
+                    document.getElementById('cell-1-0').value = "0"; document.getElementById('cell-1-1').value = "0";
+                }
+            } else {
+                document.querySelectorAll('.row-one-item').forEach(el => el.style.display = 'flex');
+                document.querySelectorAll('.row-two-item').forEach(el => el.style.display = 'flex');
+                document.getElementById('g-v1').innerText = polyData.a === 0 ? "0" : `${fmt(polyData.a)}${polyData.v1}`;
+                document.getElementById('g-v2').innerText = fmtSign(polyData.b);
+            }
+            document.getElementById('g-h1').innerText = polyData.c === 0 ? "0" : `${fmt(polyData.c)}${polyData.v1}`;
+            document.getElementById('g-h2').innerText = fmtSign(polyData.d);
+        } 
+        else {
+            document.getElementById('step3HeadingTitle').innerText = "多項式加減：去括號與同類項合併";
+            document.getElementById('multiplyGridArea').style.display = "none";
+            document.getElementById('simplifyUnbracketArea').style.display = "block";
+            document.getElementById('unbracketInput').value = "";
+        }
+
+        renderMathSteps(1);
+    }
+
+    // 展開步驟一：確認田字格數值
+    function executeUnbracketStageMultiply() {
+        const c00 = document.getElementById('cell-0-0').value.replace(/\s+/g, '').toLowerCase();
+        const c01 = document.getElementById('cell-0-1').value.replace(/\s+/g, '').toLowerCase();
+        const m10 = document.getElementById('cell-1-0').value.replace(/\s+/g, '').toLowerCase();
+        const m11 = document.getElementById('cell-1-1').value.replace(/\s+/g, '').toLowerCase();
+
+        let t00 = polyData.cells["0-0"].toLowerCase(); let t01 = polyData.cells["0-1"].toLowerCase();
+        let t10 = polyData.cells["1-0"].toLowerCase(); let t11 = polyData.cells["1-1"].toLowerCase();
+
+        if ((!document.getElementById('cell-0-1').disabled && document.getElementById('cell-0-1').style.display !== 'none' && t01.startsWith('+') && c01 === t01.substring(1)) ||
+            (!document.getElementById('cell-1-0').disabled && document.getElementById('cell-1-0').style.display !== 'none' && t10.startsWith('+') && m10 === t10.substring(1)) ||
+            (!document.getElementById('cell-1-1').disabled && document.getElementById('cell-1-1').style.display !== 'none' && t11.startsWith('+') && m11 === t11.substring(1))) {
+            alert("💡 格式防呆：除了首項，其餘正數請嚴謹寫出「+」號（例如：+15x），不能省略喔！");
+            return;
+        }
+
+        let match = (canonicalizePolyStr(c00, polyData.v1) === canonicalizePolyStr(t00, polyData.v1)) &&
+                    (canonicalizePolyStr(c01, polyData.v1) === canonicalizePolyStr(t01, polyData.v1)) &&
+                    (canonicalizePolyStr(m10, polyData.v1) === canonicalizePolyStr(t10, polyData.v1)) &&
+                    (canonicalizePolyStr(m11, polyData.v1) === canonicalizePolyStr(t11, polyData.v1));
+
+        if (match) {
+            alert(`🎯 田字格各區塊面積乘積完全正確！`);
+            let arr = [];
+            if(t00!="0") arr.push(polyData.cells["0-0"]); if(t01!="0") arr.push(polyData.cells["0-1"]);
+            if(t10!="0") arr.push(polyData.cells["1-0"]); if(t11!="0") arr.push(polyData.cells["1-1"]);
+            let s1 = arr.join(''); if(s1.startsWith('+')) s1 = s1.substring(1);
+
+            document.getElementById('interactiveStageBox').innerHTML = `<span style="font-size:22px; color:#fffb00;">${s1===''?'0':s1}</span>`;
+            document.getElementById('multiplyGridArea').style.display = "none";
+            
+            if (polyData.isSingleTerm) {
+                document.getElementById('interactiveStage3').style.display = "block";
+                renderMathSteps(3);
+            } else {
+                document.getElementById('interactiveStage2').style.display = "block";
+                setupCombineUI(); renderMathSteps(2);
+            }
+        } else { alert(`❌ 數值或正負號有誤，請對照行首列首重新心算一次！`); }
+    }
+
+    // 化簡步驟一：確認去括號式子
+    function executeUnbracketStageSimplify() {
+        let userStr = document.getElementById('unbracketInput').value.replace(/\s+/g, '').toLowerCase();
+        let part1 = `${polyData.a}${polyData.v1}${polyData.targetVarType==='v1_v2'?fmtSign(polyData.b)+polyData.v2:fmtSign(polyData.e)}`.replace(/^1/,'').replace(/^-1/,'-');
+        let cSign = polyData.sign === '+' ? polyData.c : -polyData.c;
+        let dActualSign = polyData.sign === '+' ? polyData.d : -polyData.d;
+        let fSign = polyData.sign === '+' ? polyData.f : -polyData.f;
+        
+        let part2 = polyData.targetVarType === 'v1_v2' ? `${fmtSign(cSign)}${polyData.v1}${fmtSign(dActualSign)}${polyData.v2}` : `${fmtSign(cSign)}${polyData.v1}${fmtSign(fSign)}`;
+        let expected = (part1 + part2).toLowerCase().replace(/\+0[a-z]|\+0/g, '').replace(/^\+/,'');
+
+        if (userStr === expected || userStr === expected.replace(/1/g,'')) {
+            alert(`🎯 去括號變號完全正確！進入同類項係數合併列式。`);
+            document.getElementById('interactiveStageBox').innerHTML = (polyData.targetVarType === 'v1_v2') ? 
+                `<span class="term-v1">${polyData.a}${polyData.v1}</span> <span class="term-v2">${fmtSign(polyData.b)}${polyData.v2}</span> <span class="term-v1">${fmtSign(cSign)}${polyData.v1}</span> <span class="term-v2">${fmtSign(dActualSign)}${polyData.v2}</span>` :
+                `<span class="term-v1">${polyData.a}${polyData.v1}</span> <span class="term-c">${fmtSign(polyData.e)}</span> <span class="term-v1">${fmtSign(cSign)}${polyData.v1}</span> <span class="term-c">${fmtSign(fSign)}</span>`;
+            
+            document.getElementById('simplifyUnbracketArea').style.display = "none";
+            document.getElementById('interactiveStage2').style.display = "block";
+            setupCombineUI(); renderMathSteps(2);
+        } else { alert(`❌ 串聯去括號有誤差，跨越減號分配律時要記得括號內「每一項都要變號」喔！`); }
+    }
+
+    // 共有步驟二 UI 架設
+    let targetFormulaV1 = ""; let targetFormulaV2OrC = "";
+    function setupCombineUI() {
+        let group = document.getElementById('combineFormGroup');
+        group.innerHTML = '';
+        let html = `<label><b>請填入同類項合併的「係數過程計算式」：</b></label>`;
+
+        if (currentEngine === 'MULTIPLY') {
+            targetFormulaV1 = polyData.step2_formula;
+            html += `<div class="form-group"><label>✏️ 一次項 ${polyData.v1} 的係數加減算式（對照田字格右上與左下格，例如：15+8）：</label><input type="text" id="coeffV1Input" placeholder="請填入算式"></div>`;
+        } else {
+            let cSign = polyData.sign === '+' ? polyData.c : -polyData.c;
+            targetFormulaV1 = `${polyData.a}${fmtSign(cSign)}`;
+            html += `<div class="form-group"><label>✏️ ${polyData.v1} 項的係數合併過程（對照上方黑板，如：${polyData.a}${fmtSign(cSign)}）：</label><input type="text" id="coeffV1Input" placeholder="請填入算式"></div>`;
+            
+            if(polyData.targetVarType === 'v1_v2') {
+                let dActualSign = polyData.sign === '+' ? polyData.d : -polyData.d;
+                targetFormulaV2OrC = `${polyData.b}${fmtSign(dActualSign)}`;
+                html += `<div class="form-group"><label>✏️ ${polyData.v2} 項的係數合併過程算式：</label><input type="text" id="coeffV2Input" placeholder="請填入算式"></div>`;
+            } else {
+                let fSign = polyData.sign === '+' ? polyData.f : -polyData.f;
+                targetFormulaV2OrC = `${polyData.e}${fmtSign(fSign)}`;
+                html += `<div class="form-group"><label>✏️ 常數項的合併過程加減算式：</label><input type="text" id="coeffCInput" placeholder="請填入算式"></div>`;
+            }
+        }
+        group.innerHTML = html;
+    }
+
+    function checkIsFormulaCorrect(userInput, expectedFormula, targetValue) {
+        let cleaned = userInput.replace(/\s+/g, '');
+        if(!cleaned) return false;
+        if (cleaned == String(targetValue) && cleaned !== expectedFormula && expectedFormula.replace(/\+/g,'') !== cleaned && targetValue !== 0) {
+            alert("💡 提示：此處必須要填入「係數的計算過程算式」（如 6-2），請不要填心算好的單個數字喔！");
+            return false;
+        }
+        try {
+            if(/[^0-9+\-*/()]/g.test(cleaned)) return false;
+            let userCalcResult = Function('"use strict"; return (' + cleaned + ')')();
+            return userCalcResult === targetValue;
+        } catch(e) { return false; }
+    }
+
+    // 共有步驟二：確認係數算式
+    function executeCombineStage() {
+        let uV1Str = document.getElementById('coeffV1Input').value;
+        let tV1 = (currentEngine === 'MULTIPLY') ? (polyData.a * polyData.d + polyData.b * polyData.c) : (polyData.sign === '+' ? (polyData.a + polyData.c) : (polyData.a - polyData.c));
+        
+        let isV1Correct = checkIsFormulaCorrect(uV1Str, targetFormulaV1, tV1);
+        if(!isV1Correct) { alert(`❌ 首個係數過程算式不符合，請檢查黑板對應數字與正負符號。`); return; }
+
+        if (currentEngine === 'SIMPLIFY') {
+            let isSecondCorrect = false;
+            if(polyData.targetVarType === 'v1_v2') {
+                let tV2 = polyData.sign === '+' ? (polyData.b + polyData.d) : (polyData.b - polyData.d);
+                isSecondCorrect = checkIsFormulaCorrect(document.getElementById('coeffV2Input').value, targetFormulaV2OrC, tV2);
+                if(!isSecondCorrect) { alert(`❌ 第二變數項的合併算式有誤。`); return; }
+            } else {
+                let tC = polyData.sign === '+' ? (polyData.e + polyData.f) : (polyData.e - polyData.f);
+                isSecondCorrect = checkIsFormulaCorrect(document.getElementById('coeffCInput').value, targetFormulaV2OrC, tC);
+                if(!isSecondCorrect) { alert(`❌ 常數項的合併算式有誤。`); return; }
+            }
+        }
+
+        alert("🎯 過程算式完全正確！代數概念非常明晰，進入最終集成！");
+        document.getElementById('interactiveStage2').style.display = "none";
+        document.getElementById('interactiveStage3').style.display = "block";
+        document.getElementById('finalAnsInput').value = "";
+        renderMathSteps(3);
+    }
+
+    // 共有步驟三：集成最終宣告結果
+    function executeFinal() {
+        let userFinal = document.getElementById('finalAnsInput').value;
+        let normUser = canonicalizePolyStr(userFinal, polyData.v1);
+        let normTarget = canonicalizePolyStr(polyData.ansStr, polyData.v1);
+
+        if(normUser === normTarget) {
+            document.getElementById('interactiveStageBox').innerHTML = `破譯大功告成：<span style="color:#00ff00;">${polyData.ansStr}</span> 🎯`;
+            document.getElementById('interactiveStage3').style.display = "none"; 
+            document.getElementById('nextBtn').style.display = "block";
+            
+            document.getElementById('feedbackArea').innerHTML = `💡 引導成功！代數智慧大升級，請勇敢點選下方前進下一步！`;
+            document.getElementById('feedbackArea').className = "feedback success";
+            
+            setupNextButtonLabel(); renderMathSteps(4);
+        } else { alert("格式不對喔，請拼湊輸入剛剛推導出的最簡化展開化簡式子結果。"); }
+    }
+
+    // 前進下一題
+    function advanceQuestion() {
+        if (session.currentMode === 'CHALLENGE') {
+            if (session.currentIdx < session.questionList.length - 1) {
+                session.currentIdx++; loadPolynomialToStage();
+            } else {
+                if (session.endCondition === 'COUNT') {
+                    alert(`🏁 恭喜完成整組代數闖關挑戰！進度數據已全數安全備份。`); resetToMainMenu(false);
+                } else {
+                    if (session.score >= session.targetScore) { 
+                        alert(`🏆 積分成功達標！您真的很棒！`); resetToMainMenu(false); 
+                    } else { 
+                        session.currentIdx++; session.questionList.push(generateQuestion(currentEngine, session.selectedType)); loadPolynomialToStage(); 
+                    }
+                }
+            }
+        } else if (session.currentMode === 'REVIEW') {
+            if (session.currentIdx < cacheStorage[currentEngine].wrongBook.length - 1) {
+                session.currentIdx++;
+                session.totalQuestions = cacheStorage[currentEngine].wrongBook.length;
+                session.questionList = [...cacheStorage[currentEngine].wrongBook];
+                loadPolynomialToStage();
+            } else { alert(`🏁 錯題重溫結束！表現優異。`); resetToMainMenu(false); }
+        } else { resetToMainMenu(false); }
+    }
+
+    // =========================================================================
+    // 📊 數據統計與黑板排版更新
+    // =========================================================================
+    function calculateAndRenderStats() {
+        document.getElementById('statsDescLabel').innerText = `此處顯示當前【${currentEngine==='SIMPLIFY'?'化簡模組':'展開模組'}】下智能闖關作答數據歷程：`;
+        const tbody = document.getElementById('statsTableBody'); tbody.innerHTML = '';
+        let engineStats = cacheStorage[currentEngine].stats;
+        let engineWrongBook = cacheStorage[currentEngine].wrongBook;
+
+        for (let key in engineStats) {
+            let row = engineStats[key];
+            let firstRate = row.total > 0 ? Math.round((row.firstMatch / row.total) * 100) + '%' : '0%';
+            let totalSuccessRate = row.total > 0 ? Math.round(((row.firstMatch + row.retryMatch) / row.total) * 100) + '%' : '0%';
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td style="text-align:left; font-weight:bold;">${row.name}</td><td>${row.total}</td><td style="color:var(--success); font-weight:bold;">${row.firstMatch}</td><td style="color:#b45309;">${row.retryMatch}</td><td style="color:var(--danger);">${row.failed}</td><td style="background:#f0fdf4; font-weight:bold; color:var(--success);">${firstRate}</td><td style="background:#eff6ff; font-weight:bold; color:var(--primary);">${totalSuccessRate}</td>`;
+            tbody.appendChild(tr);
+        }
+        document.getElementById('statsWrongCount').innerText = engineWrongBook.length;
+        document.getElementById('statsWrongList').innerHTML = engineWrongBook.length > 0 ? engineWrongBook.map((prob, i) => `<div>❌ 錯題 ${i+1}： ${prob}</div>`).join('') : '🎉 雲端此模組暫無錯題，完美精熟！';
+        
+        document.getElementById('printStudentInfo').innerText = `學生班別：${userRawClass} 班 &nbsp;&nbsp;&nbsp;&nbsp; 學號：${userRawSeat} 號 &nbsp;&nbsp;&nbsp;&nbsp; 模組：${currentEngine==='SIMPLIFY'?'化簡':'展開'}`;
+        document.getElementById('printDate').innerText = `報告產出時間：` + new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function exportToPDF() { calculateAndRenderStats(); window.print(); }
+
+    function renderMathSteps(stepCode) {
+        const box = document.getElementById('mathStepBox');
+        let original = session.questionList[session.currentIdx];
+        
+        if (currentEngine === 'MULTIPLY') {
+            let html = `// 📐 多項式展開黑板步驟：<br><br><div class="${stepCode===1?'active-line':''}">[原式] ${original}</div>`;
+            let t00 = polyData.cells["0-0"]; let t01 = polyData.cells["0-1"];
+            let t10 = polyData.cells["1-0"]; let t11 = polyData.cells["1-1"];
+            let arr = []; if(t00!="0") arr.push(t00); if(t01!="0") arr.push(t01); if(t10!="0") arr.push(t10); if(t11!="0") arr.push(t11);
+            let s1 = arr.join(''); if(s1.startsWith('+')) s1 = s1.substring(1);
+
+            if(stepCode >= 2) html += `<div class="${stepCode===2?'active-line':''}">[分配律展開] = ${s1===''?'0':s1}</div>`;
+            let s2 = polyData.isSingleTerm ? polyData.ansStr : `${polyData.cells["0-0"]} + (${polyData.a * polyData.d}${fmtSign(polyData.b * polyData.c)})${polyData.v1} ${fmtSign(polyData.b * polyData.d)}`;
+            if(stepCode >= 3) html += `<div class="${stepCode===3?'active-line':''}">[${polyData.isSingleTerm?'展開乘積':'同類項分組'}] = ${s2}</div>`;
+            if(stepCode >= 4) html += `<div class="active-line">[最簡化結果] = ${polyData.ansStr} 🎯</div>`;
+            box.innerHTML = html;
+        } 
+        else {
+            let html = `// 🔮 多項式化簡黑板步驟：<br><br><div class="${stepCode===1?'active-line':''}">[原式] ${original}</div>`;
+            let part1 = `${polyData.a}${polyData.v1}${polyData.targetVarType==='v1_v2'?fmtSign(polyData.b)+polyData.v2:fmtSign(polyData.e)}`.replace(/^1/,'').replace(/^-1/,'-');
+            let cSign = polyData.sign === '+' ? polyData.c : -polyData.c;
+            let dAct = polyData.sign === '+' ? polyData.d : -polyData.d;
+            let fSign = polyData.sign === '+' ? polyData.f : -polyData.f;
+            let part2 = polyData.targetVarType === 'v1_v2' ? `${fmtSign(cSign)}${polyData.v1}${fmtSign(dAct)}${polyData.v2}` : `${fmtSign(cSign)}${polyData.v1}${fmtSign(fSign)}`;
+            let s2 = (part1 + part2).replace(/\+0[a-z]|\+0/g, '');
+
+            if(stepCode >= 2) html += `<div class="${stepCode===2?'active-line':''}">[去括號變號] = ${s2}</div>`;
+            let s3 = polyData.targetVarType === 'v1_v2' ? `(${polyData.a}${fmtSign(cSign)})${polyData.v1} + (${polyData.b}${fmtSign(dAct)})${polyData.v2}` : `(${polyData.a}${fmtSign(cSign)})${polyData.v1} + (${polyData.e}${fmtSign(fSign)})`;
+            if(stepCode >= 3) html += `<div class="${stepCode===3?'active-line':''}">[同類項分組] = ${s3}</div>`;
+            if(stepCode >= 4) html += `<div class="active-line">[最簡多項式] = ${polyData.ansStr} 🎯</div>`;
+            box.innerHTML = html;
+        }
+    }
+</script>
+
+</body>
+</html>
