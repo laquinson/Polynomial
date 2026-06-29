@@ -144,7 +144,7 @@
         table.stats-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 15px; margin-bottom: 25px; }
         table.stats-table th, table.stats-table td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
         table.stats-table th { background: #f1f5f9; color: #334155; }
-        table.stats-table tr.section-title th { background: #2b5797; color: white; text-align: left; font-size: 16px; }
+        table.stats-table tr.section-title th { background: #2b5797 !important; color: white !important; text-align: left; font-size: 16px; padding-left: 15px; }
         .btn-group { display: flex; gap: 15px; margin-top: 20px; }
 
         /* 田字格專屬響應式排版 */
@@ -439,7 +439,7 @@
     <div id="step_stats_panel" class="step-panel">
         <h2>📊 學生學習歷程歷程數據分析報告</h2>
         <p class="non-print" style="color:#666; font-size:14px; text-align:center;">
-            本系統已完美合併兩大模組數據。首發正確率反映概念精熟度；綜合通關率包含原地補答表現。
+            本報告已完美統合兩大引擎：首發正確率反映概念精熟度；綜合通關率包含原地補答表現。
         </p>
         
         <table class="stats-table">
@@ -482,15 +482,18 @@
     // =========================================================================
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwIK7Mqd4WEDpbuZR-PDt4pq-8EkZ74POUDDe9WgxZA_5QqPvIBdGdD2jVFjsVOZRIj/exec";
 
-    let currentEngine = "SIMPLIFY"; // "SIMPLIFY" 或 "MULTIPLY"
+    let currentEngine = "SIMPLIFY"; 
     let userRawClass = "";
     let userRawSeat = "";
     
-    // 分流存儲各核心數據
     let cacheStorage = {
-        SIMPLIFY: { wrongBook: [], stats: getInitialStatsObject("SIMPLIFY") },
-        MULTIPLY: { wrongBook: [], stats: getInitialStatsObject("MULTIPLY") }
+        SIMPLIFY: { wrongBook: [], stats: {} },
+        MULTIPLY: { wrongBook: [], stats: {} }
     };
+
+    // 強制初始化預設乾淨統計結構
+    cacheStorage.SIMPLIFY.stats = getInitialStatsObject("SIMPLIFY");
+    cacheStorage.MULTIPLY.stats = getInitialStatsObject("MULTIPLY");
 
     function getInitialStatsObject(engine) {
         if (engine === "SIMPLIFY") {
@@ -518,12 +521,11 @@
         }
     }
 
-    // 👤 雙軌數據庫異地互通抓取
     function loginStudent() {
         userRawClass = document.getElementById('loginClass').value;
         userRawSeat = document.getElementById('loginSeat').value;
         
-        toggleOverlay(true, `正在連結試算表，同步您的雙模組代數進度...`);
+        toggleOverlay(true, `正在跨校聯網絡抓取兩大代數模組數據...`);
         
         let keySim = `Simplify_${userRawClass}-${userRawSeat}`;
         let keyMul = `PolyMulti_${userRawClass}-${userRawSeat}`;
@@ -532,16 +534,16 @@
             fetch(GAS_API_URL + "?jsonData=" + encodeURIComponent(JSON.stringify({ action: "load", userKey: keySim }))).then(r => r.json()).catch(()=>null),
             fetch(GAS_API_URL + "?jsonData=" + encodeURIComponent(JSON.stringify({ action: "load", userKey: keyMul }))).then(r => r.json()).catch(()=>null)
         ]).then(([dataSim, dataMul]) => {
-            // 化簡
+            // 完美解析化簡數據
             if(dataSim && dataSim.success && dataSim.stats && dataSim.stats["1"]) {
                 cacheStorage.SIMPLIFY.wrongBook = dataSim.wrongBook || [];
                 cacheStorage.SIMPLIFY.stats = dataSim.stats;
-            } else { initFallbackData("SIMPLIFY", keySim); }
-            // 展開
+            } else { initFallbackData("SIMPLIFY"); }
+            // 完美解析展開數據
             if(dataMul && dataMul.success && dataMul.stats && dataMul.stats["1"]) {
                 cacheStorage.MULTIPLY.wrongBook = dataMul.wrongBook || [];
                 cacheStorage.MULTIPLY.stats = dataMul.stats;
-            } else { initFallbackData("MULTIPLY", keyMul); }
+            } else { initFallbackData("MULTIPLY"); }
 
             localStorage.setItem(`CombinedPolyCache_Sim_${userRawClass}-${userRawSeat}`, JSON.stringify(cacheStorage.SIMPLIFY));
             localStorage.setItem(`CombinedPolyCache_Mul_${userRawClass}-${userRawSeat}`, JSON.stringify(cacheStorage.MULTIPLY));
@@ -551,7 +553,7 @@
         });
     }
 
-    function initFallbackData(engine, key) {
+    function initFallbackData(engine) {
         let localKey = engine === "SIMPLIFY" ? `CombinedPolyCache_Sim_${userRawClass}-${userRawSeat}` : `CombinedPolyCache_Mul_${userRawClass}-${userRawSeat}`;
         let cached = localStorage.getItem(localKey);
         if(cached) {
@@ -920,11 +922,9 @@
             session.score += 1; document.getElementById('scoreText').innerText = `目前積分：${session.score} 分`;
             if (session.wrongAttemptsThisQuestion === 1) {
                 cacheStorage[currentEngine].stats[session.currentTypeNum].failed--; cacheStorage[currentEngine].stats[session.currentTypeNum].retryMatch++;
-                feedback.innerHTML = `🎉 補答修正完全正確！<span style="color:var(--success);">[補答挽回成功] 積分 +1 分！</span>`;
-            } else {
-                feedback.innerHTML = `🎉 太強了！一擊必殺首發完全正確！<span style="color:var(--success);">[挑戰成功] 積分 +1 分！</span>`;
             }
             cloudSaveData();
+            feedback.innerHTML = `🎉 完全正確！`;
         } else if (session.currentMode === 'REVIEW') {
             let currentExpr = session.questionList[session.currentIdx];
             cacheStorage[currentEngine].wrongBook = cacheStorage[currentEngine].wrongBook.filter(item => item !== currentExpr);
@@ -1021,10 +1021,10 @@
                     (canonicalizePolyStr(m11, polyData.v1) === canonicalizePolyStr(t11, polyData.v1));
 
         if (match) {
-            alert(`🎯 田字格各區塊面積乘積完全正確！`);
+            alert("🎯 田字格數值正確！");
             let arr = [];
             if(t00!="0") arr.push(polyData.cells["0-0"]); if(t01!="0") arr.push(polyData.cells["0-1"]);
-            if(t10!="0") arr.push(polyData.cells["1-0"]); if(t11!="0") arr.push(polyData.cells["1-1"]);
+            if(t10!="0") arr.push(t10); if(t11!="0") arr.push(t11);
             let s1 = arr.join(''); if(s1.startsWith('+')) s1 = s1.substring(1);
 
             document.getElementById('interactiveStageBox').innerHTML = `<span style="font-size:22px; color:#fffb00;">${s1===''?'0':s1}</span>`;
@@ -1111,7 +1111,7 @@
                 if(!isSecondCorrect) { alert(`❌ 常數項的合併算式有誤。`); return; }
             }
         }
-        alert("🎯 過程算式完全正確！代數概念非常明晰，進入最終集成！");
+        alert("🎯 過程算式完全正確！進入最終集成！");
         document.getElementById('interactiveStage2').style.display = "none"; document.getElementById('interactiveStage3').style.display = "block";
         document.getElementById('finalAnsInput').value = ""; renderMathSteps(3);
     }
@@ -1124,51 +1124,57 @@
         if(normUser === normTarget) {
             document.getElementById('interactiveStageBox').innerHTML = `破譯大功告成：<span style="color:#00ff00;">${polyData.ansStr}</span> 🎯`;
             document.getElementById('interactiveStage3').style.display = "none"; document.getElementById('nextBtn').style.display = "block";
-            document.getElementById('feedbackArea').innerHTML = `💡 引導成功！代數智慧大升級，請點選下一題前進！`;
-            document.getElementById('feedbackArea').className = "feedback success";
             setupNextButtonLabel(); renderMathSteps(4);
-        } else { alert("格式不對喔，請推導輸入最終最簡化展開化簡式子結果。"); }
+        } else { alert("格式不對喔，請重新確認最終結果。"); }
     }
 
-    function advanceQuestion() {
-        if (session.currentMode === 'CHALLENGE') {
-            if (session.currentIdx < session.questionList.length - 1) {
-                session.currentIdx++; loadPolynomialToStage();
-            } else {
-                if (session.endCondition === 'COUNT') {
-                    alert(`🏁 恭喜完成整組代數闖關挑戰！進度數據已同步備份。`); resetToMainMenu(false);
-                } else {
-                    if (session.score >= session.targetScore) { alert(`🏆 積分成功達標！您真的很棒！`); resetToMainMenu(false); } 
-                    else { session.currentIdx++; session.questionList.push(generateQuestion(currentEngine, session.selectedType)); loadPolynomialToStage(); }
-                }
-            }
-        } else if (session.currentMode === 'REVIEW') {
-            if (session.currentIdx < cacheStorage[currentEngine].wrongBook.length - 1) {
-                session.currentIdx++; session.totalQuestions = cacheStorage[currentEngine].wrongBook.length;
-                session.questionList = [...cacheStorage[currentEngine].wrongBook]; loadPolynomialToStage();
-            } else { alert(`🏁 錯題重溫結束！表現優異。`); resetToMainMenu(false); }
-        } else { resetToMainMenu(false); }
+    function resetToMainMenu(needConfirm = false) {
+        let confirmLeave = true;
+        if(needConfirm && (session.currentMode === 'CHALLENGE' || session.currentMode === 'REVIEW') && (document.getElementById('step2').classList.contains('active') || document.getElementById('step3').classList.contains('active'))) {
+            confirmLeave = confirm("確定要中止測驗返回主選單嗎？未完結的分數將不予記錄。");
+        }
+        if(confirmLeave) {
+            document.getElementById('nextBtn').style.display = "none"; 
+            document.getElementById('teachingZone').style.display = "none";
+            cloudSaveData(); updateReviewMenuUI(); showPanel('step1');
+        }
     }
 
     // =========================================================================
-    // 📊 全模組數據庫同步渲染核心 (同時載入化簡與展開所有歷史)
+    // 📊 【全面修復】全模組雙機制數據並存渲染核心
     // =========================================================================
     function calculateAndRenderStats() {
         const tbody = document.getElementById('statsTableBody');
-        tbody.innerHTML = '';
+        tbody.innerHTML = ''; // 清空大表格
 
-        // 🌟 核心升級一：整合式巨型表格生成 (同時顯示化簡與展開的所有題型結構)
-        const renderBlock = (engineType, titleName) => {
+        // 🌟 強制從記憶體核心對象直接提取兩份完整的數據對象，確保不被互相覆蓋
+        const enginesToRender = [
+            { key: "SIMPLIFY", name: "多項式變數化簡機 (加減法雲端數據庫)" },
+            { key: "MULTIPLY", name: "多項式乘法展開機 (田字魔法陣數據庫)" }
+        ];
+
+        enginesToRender.forEach(engineBlock => {
+            // 建立大模組的專屬藍色橫列標題
             let sectionTr = document.createElement('tr');
             sectionTr.className = "section-title";
-            sectionTr.innerHTML = `<th colspan="7">🌀 ${titleName}</th>`;
+            sectionTr.innerHTML = `<th colspan="7">🌀 ${engineBlock.name}</th>`;
             tbody.appendChild(sectionTr);
 
-            let statsObj = cacheStorage[engineType].stats;
-            for (let key in statsObj) {
-                let row = statsObj[key];
+            // 讀取該引擎下所有的子題型
+            let statsDataObj = cacheStorage[engineBlock.key].stats;
+            
+            // 💡 安全防呆：如果因為連線異常導致對象為空，則重新生成一筆
+            if (!statsDataObj || Object.keys(statsDataObj).length === 0) {
+                statsDataObj = getInitialStatsObject(engineBlock.key);
+                cacheStorage[engineBlock.key].stats = statsDataObj;
+            }
+
+            // 逐行填入 4 個題型數據
+            for (let key in statsDataObj) {
+                let row = statsDataObj[key];
                 let firstRate = row.total > 0 ? Math.round((row.firstMatch / row.total) * 100) + '%' : '0%';
                 let totalSuccessRate = row.total > 0 ? Math.round(((row.firstMatch + row.retryMatch) / row.total) * 100) + '%' : '0%';
+                
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="text-align:left; font-weight:bold; padding-left:15px;">${row.name}</td>
@@ -1181,15 +1187,11 @@
                 `;
                 tbody.appendChild(tr);
             }
-        };
+        });
 
-        // 繪製兩大機制區塊
-        renderBlock("SIMPLIFY", "多項式變數化簡機 (加減法數據庫)");
-        renderBlock("MULTIPLY", "多項式乘法展開機 (田字魔法陣數據庫)");
-
-        // 🌟 核心升級二：全面整合兩邊錯題本
-        let simWrong = cacheStorage.SIMPLIFY.wrongBook;
-        let mulWrong = cacheStorage.MULTIPLY.wrongBook;
+        // 匯整雙軌錯題本
+        let simWrong = cacheStorage.SIMPLIFY.wrongBook || [];
+        let mulWrong = cacheStorage.MULTIPLY.wrongBook || [];
         let totalWrongHTML = "";
 
         if (simWrong.length === 0 && mulWrong.length === 0) {
@@ -1209,7 +1211,7 @@
         document.getElementById('statsAllWrongList').innerHTML = totalWrongHTML;
         
         if (userRawClass) {
-            document.getElementById('printStudentInfo').innerText = `學生班別：${userRawClass} 班 &nbsp;&nbsp;&nbsp;&nbsp; 學號：${userRawSeat} 號 &nbsp;&nbsp;&nbsp;&nbsp; 報告類型：全功能綜合歷程數據`;
+            document.getElementById('printStudentInfo').innerText = `學生班別：${userRawClass} 班 &nbsp;&nbsp;&nbsp;&nbsp; 學號：${userRawSeat} 號 &nbsp;&nbsp;&nbsp;&nbsp; 報告：全功能綜合歷程報告`;
         }
         document.getElementById('printDate').innerText = `報告產出時間：` + new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
@@ -1220,8 +1222,7 @@
         const box = document.getElementById('mathStepBox'); let original = session.questionList[session.currentIdx];
         if (currentEngine === 'MULTIPLY') {
             let html = `// 📐 多項式展開黑板步驟：<br><br><div class="${stepCode===1?'active-line':''}">[原式] ${original}</div>`;
-            let t00 = polyData.cells["0-0"]; let t01 = polyData.cells["0-1"];
-            let t10 = polyData.cells["1-0"]; let t11 = polyData.cells["1-1"];
+            let t00 = polyData.cells["0-0"]; let t01 = polyData.cells["0-1"]; let t10 = polyData.cells["1-0"]; let t11 = polyData.cells["1-1"];
             let arr = []; if(t00!="0") arr.push(t00); if(t01!="0") arr.push(t01); if(t10!="0") arr.push(t10); if(t11!="0") arr.push(t11);
             let s1 = arr.join(''); if(s1.startsWith('+')) s1 = s1.substring(1);
 
