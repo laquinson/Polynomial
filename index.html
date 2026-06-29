@@ -13,6 +13,7 @@
             --info: #17a2b8;
             --stage-bg: #1a202c;
             --bg: #f4f6f9;
+            --teacher-color: #6b21a8;
         }
 
         body {
@@ -53,7 +54,7 @@
         .form-group { margin-bottom: 25px; width: 100%; box-sizing: border-box; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #4a5568; }
         
-        input[type="text"], input[type="number"], select {
+        input[type="text"], input[type="password"], input[type="number"], select {
             width: 100%; padding: 14px; border: 2px solid #ccd1d9; border-radius: 8px; font-size: 18px; box-sizing: border-box; background: #fff;
         }
 
@@ -81,6 +82,7 @@
         button.btn-warning { background-color: #d97706; }
         button.btn-info { background-color: var(--info); }
         button.btn-secondary { background-color: #6c757d; margin-top: 15px; }
+        button.btn-purple { background-color: var(--teacher-color); }
 
         .progress-banner {
             background: #e2e8f0; padding: 12px 20px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 16px; align-items: center;
@@ -192,10 +194,14 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        .toggle-login-mode {
+            text-align: center; margin-top: 15px; font-weight: bold; color: var(--primary); cursor: pointer; text-decoration: underline;
+        }
+
         @media print {
             body { background: white; color: black; padding: 0; }
             .container { box-shadow: none; padding: 0; max-width: 100%; margin: 0; }
-            .home-nav-btn, .logout-btn, button, .mode-selection-box, .supported-types, .form-group, hr, .btn-group, .loading-overlay {
+            .home-nav-btn, .logout-btn, button, .mode-selection-box, .supported-types, .form-group, hr, .btn-group, .loading-overlay, .toggle-login-mode {
                 display: none !important;
             }
             .step-panel { display: none !important; }
@@ -216,9 +222,10 @@
 </div>
 
 <button id="globalHomeBtn" class="home-nav-btn" onclick="resetToMainMenu(true)">↩️ 返回主選單</button>
-<button id="globalLogoutBtn" class="logout-btn" onclick="logoutStudent()">🚪 切換帳號</button>
+<button id="globalLogoutBtn" class="logout-btn" onclick="logoutSession()">🚪 登出系統</button>
 
 <div class="container">
+    <!-- PDF 專用列印頁首 -->
     <div class="print-only-header">
         <h1>🔮 多項式 - 學生學習報告</h1>
         <h2 id="printStudentInfo" style="color:#111;">學生班別：載入中...</h2>
@@ -228,63 +235,111 @@
     <h1 class="non-print">🔮 多項式</h1>
     <hr class="non-print" style="border: 0; height: 1px; background: #ddd; margin-bottom: 20px;">
 
+    <!-- 登入介面面板 (區分為學生/教師雙模式) -->
     <div id="step0_login" class="step-panel active">
-        <h2 style="margin-bottom: 20px;">👤 學生登入</h2>
-        <div class="form-group">
-            <label for="loginClass">🏫 請選取您的班別：</label>
-            <select id="loginClass">
-                <script>
-                    (function() {
-                        var html = "";
-                        for (var grade = 1; grade <= 6; grade++) {
-                            ['A', 'B', 'C', 'D'].forEach(function(letter) {
-                                html += '<option value="' + grade + letter + '">' + grade + letter + ' 班</option>';
-                            });
-                        }
-                        document.write(html);
-                    })();
-                </script>
-            </select>
+        <!-- 學生登入視窗 -->
+        <div id="studentLoginBox">
+            <h2 style="margin-bottom: 20px;">👤 學生登入</h2>
+            <div class="form-group">
+                <label for="loginClass">🏫 請選取您的班別：</label>
+                <select id="loginClass">
+                    <script>
+                        (function() {
+                            var html = "";
+                            for (var grade = 1; grade <= 6; grade++) {
+                                ['A', 'B', 'C', 'D'].forEach(function(letter) {
+                                    html += '<option value="' + grade + letter + '">' + grade + letter + ' 班</option>';
+                                });
+                            }
+                            document.write(html);
+                        })();
+                    </script>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="loginSeat">🔢 請選取您的學號：</label>
+                <select id="loginSeat">
+                    <script>
+                        (function() {
+                            var html = "";
+                            for (var i = 1; i <= 35; i++) {
+                                html += '<option value="' + i + '">' + i + ' 號</option>';
+                            }
+                            document.write(html);
+                        })();
+                    </script>
+                </select>
+            </div>
+            <button id="loginSubmitBtn" onclick="loginStudent()" style="background-color: var(--primary); font-size: 18px; margin-top: 10px;">學生雲端連線登入 🚀</button>
+            <div class="toggle-login-mode" onclick="toggleLoginMode('TEACHER')">🔐 切換至教師管理員登入</div>
         </div>
-        <div class="form-group">
-            <label for="loginSeat">🔢 請選取您的學號：</label>
-            <select id="loginSeat">
-                <script>
-                    (function() {
-                        var html = "";
-                        for (var i = 1; i <= 35; i++) {
-                            html += '<option value="' + i + '">' + i + ' 號</option>';
-                        }
-                        document.write(html);
-                    })();
-                </script>
-            </select>
+
+        <!-- 教師登入視窗 -->
+        <div id="teacherLoginBox" style="display: none;">
+            <h2 style="margin-bottom: 20px; color: var(--teacher-color);">🔑 教師管理員登入</h2>
+            <div class="form-group">
+                <label for="teacherSelect">💼 請選取您的教師帳號：</label>
+                <select id="teacherSelect">
+                    <option value="Teacher_01">💼 01號 教師管理員</option>
+                    <option value="Teacher_02">💼 02號 教師管理員</option>
+                    <option value="Teacher_03">💼 03號 教師管理員</option>
+                    <option value="Teacher_04">💼 04號 教師管理員</option>
+                    <option value="Teacher_05">💼 05號 教師管理員</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="teacherPwd">🔒 請輸入安全密碼：</label>
+                <input type="password" id="teacherPwd" placeholder="請輸入密碼 (初始為1007)">
+            </div>
+            <button id="teacherLoginBtn" onclick="loginTeacher()" class="btn-purple" style="font-size: 18px; margin-top: 10px;">教師權限驗證登入 🔓</button>
+            <div class="toggle-login-mode" onclick="toggleLoginMode('STUDENT')">🎒 切換回學生學習登入</div>
         </div>
-        <button id="loginSubmitBtn" onclick="loginStudent()" style="background-color: var(--primary); font-size: 18px; margin-top: 10px;">雲端互通登入 🚀</button>
     </div>
 
+    <!-- 主選單介面 (學生與教師共用，教師增強功能) -->
     <div id="step1" class="step-panel">
         <h2 id="welcomeText" style="color: var(--success);">歡迎前來學習！</h2>
         <div class="mode-selection-box">
-            <div class="mode-card" onclick="switchSetupConfig('CHALLENGE')">
+            <div class="mode-card id-student-only" onclick="switchSetupConfig('CHALLENGE')">
                 <h3>🎮 智能闖關模式</h3>
                 <p>自由選擇「化簡」或「展開」關卡，自動生成各式組合、計分與原地補答修正！</p>
             </div>
-            <div class="mode-card" onclick="switchSetupConfig('SOLVER')">
+            <div class="mode-card id-student-only" onclick="switchSetupConfig('SOLVER')">
                 <h3>🛠️ 解答模式</h3>
                 <p>手動輸入任何化簡式或乘法算式，系統將智慧辨識並提供專屬的破譯解說！</p>
             </div>
-            <div id="reviewModeCard" class="mode-card disabled" onclick="switchSetupConfig('REVIEW')">
+            <div id="reviewModeCard" class="mode-card disabled id-student-only" onclick="switchSetupConfig('REVIEW')">
                 <h3>📘 錯題溫習模式<span id="reviewBadge" class="badge-count" style="display:none;">0</span></h3>
                 <p>針對您當前核心模組答錯的魔王題進行重溫，答對即可從錯題本消滅！</p>
             </div>
             <div class="mode-card" onclick="switchSetupConfig('STATS')" style="border-color: var(--info);">
-                <h3>📊 學生學習數據</h3>
-                <p>同時查詢與統計<b>化簡和展開所有模式</b>的答對率、完整錯題清單，支援匯出 PDF 報告！</p>
+                <h3 id="statsCardTitle">📊 學生學習數據</h3>
+                <p id="statsCardDesc">同時查詢與統計化簡和展開所有模式的答對率、完整錯題清單，支援匯出 PDF 報告！</p>
+            </div>
+            <!-- 教師專屬：變更密碼功能卡 -->
+            <div class="mode-card id-teacher-only" onclick="switchSetupConfig('CHG_PWD')" style="border-color: var(--warning); display: none;">
+                <h3>⚙️ 變更管理密碼</h3>
+                <p>修改目前登入的教師帳號密碼，確保數據調閱權限的安全。</p>
             </div>
         </div>
     </div>
 
+    <!-- 教師專屬：修改密碼介面 -->
+    <div id="step1_chgpwd" class="step-panel">
+        <h2 style="color: var(--teacher-color);">⚙️ 修改教師管理密碼</h2>
+        <div class="form-group">
+            <label for="oldPwd">🔑 請輸入原密碼：</label>
+            <input type="password" id="oldPwd">
+        </div>
+        <div class="form-group">
+            <label for="newPwd">🆕 請輸入新密碼：</label>
+            <input type="password" id="newPwd">
+        </div>
+        <button onclick="changeTeacherPassword()" class="btn-purple" style="font-size:18px;">確認更新安全密碼</button>
+        <button class="btn-secondary" onclick="resetToMainMenu(false)">取消返回</button>
+    </div>
+
+    <!-- 闖關模式設定 -->
     <div id="step1_challenge" class="step-panel">
         <h2>🎮 闖關模式設定</h2>
         <div class="form-group">
@@ -301,8 +356,7 @@
 
         <div class="form-group">
             <label for="typeSelect">🎯 請選取挑戰的子題型結構：</label>
-            <select id="typeSelect">
-                </select>
+            <select id="typeSelect"></select>
         </div>
 
         <div class="form-group">
@@ -329,6 +383,7 @@
         <button onclick="initChallengeSession()" style="background-color: var(--success); font-size: 18px;">🎲 建立關卡，出發！</button>
     </div>
 
+    <!-- 解答模式 -->
     <div id="step1_solver" class="step-panel">
         <h2>🛠️ 解答模式</h2>
         <div class="form-group">
@@ -338,6 +393,7 @@
         <button onclick="handleManualSolverInput()" style="font-size: 18px;">開始逐步教學引導</button>
     </div>
 
+    <!-- 答題核心舞台 -->
     <div id="step2" class="step-panel">
         <div class="progress-banner">
             <span id="progressText">進度：載入中...</span>
@@ -356,6 +412,7 @@
         <button id="submitAnsBtn" onclick="checkFirstAnswer()">提交結果並驗證</button>
     </div>
 
+    <!-- 逐步動態引導與黑板 -->
     <div id="step3" class="step-panel">
         <div class="progress-banner">
             <span id="progressTextStage3">進度：載入中...</span>
@@ -431,9 +488,28 @@
         <button id="nextBtn" class="btn-success" onclick="advanceQuestion()" style="display:none; margin-top:20px;">前進下一題 ➡️</button>
     </div>
 
+    <!-- 📊 學生學習數據面板 (教師模式時，上方出現動態選單供調閱各學生檔案) -->
     <div id="step_stats_panel" class="step-panel">
-        <h2>📊 學生學習數據</h2>
+        <h2 style="margin-bottom:10px;">📊 學生學習數據</h2>
         
+        <!-- 教師專屬：調閱學生過濾器 -->
+        <div id="teacherQueryZone" class="non-print" style="background: #f3e8ff; padding: 15px; border-radius: 10px; border: 2px dashed var(--teacher-color); margin-bottom: 20px; display: none;">
+            <p style="margin: 0 0 10px 0; font-weight: bold; color: var(--teacher-color); font-size: 16px;">🔍 教師查閱功能：請選取欲調閱的學生數據</p>
+            <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:120px;">
+                    <label style="font-size:14px; margin-bottom:4px;">選取班別：</label>
+                    <select id="queryClass" style="padding:8px; font-size:16px;"></select>
+                </div>
+                <div style="flex:1; min-width:120px;">
+                    <label style="font-size:14px; margin-bottom:4px;">選取學號：</label>
+                    <select id="querySeat" style="padding:8px; font-size:16px;"></select>
+                </div>
+                <div style="display: flex; align-items: flex-end; width:100%; max-width: 180px;">
+                    <button onclick="loadTargetStudentDataByTeacher()" class="btn-purple" style="padding:9px; font-size:15px;">調閱歷程數據</button>
+                </div>
+            </div>
+        </div>
+
         <table class="stats-table">
             <thead>
                 <tr>
@@ -446,8 +522,7 @@
                     <th>綜合通關率</th>
                 </tr>
             </thead>
-            <tbody id="statsTableBody">
-                </tbody>
+            <tbody id="statsTableBody"></tbody>
         </table>
 
         <div style="margin-top: 20px;">
@@ -463,6 +538,7 @@
         </div>
     </div>
 
+    <!-- 頁尾宣告 -->
     <div class="print-footer">
         <p>數學練習整合系統©2026 羅坤山老師</p>
     </div>
@@ -474,6 +550,9 @@
     // =========================================================================
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwIK7Mqd4WEDpbuZR-PDt4pq-8EkZ74POUDDe9WgxZA_5QqPvIBdGdD2jVFjsVOZRIj/exec";
 
+    let currentRole = "STUDENT"; // 'STUDENT' 或 'TEACHER'
+    let activeTeacherId = "";    // 目前登入的老師編號
+    
     let currentEngine = "SIMPLIFY"; 
     let userRawClass = "";
     let userRawSeat = "";
@@ -482,6 +561,17 @@
         SIMPLIFY: { wrongBook: [], stats: {} },
         MULTIPLY: { wrongBook: [], stats: {} }
     };
+
+    // 初始密碼邏輯（儲存於本地以防重新整理遺失，初始皆為 '1007'）
+    function initTeacherPasswords() {
+        for(let i=1; i<=5; i++) {
+            let key = `Teacher_Pwd_0${i}`;
+            if(!localStorage.getItem(key)) {
+                localStorage.setItem(key, "1007");
+            }
+        }
+    }
+    initTeacherPasswords();
 
     cacheStorage.SIMPLIFY.stats = getInitialStatsObject("SIMPLIFY");
     cacheStorage.MULTIPLY.stats = getInitialStatsObject("MULTIPLY");
@@ -512,14 +602,108 @@
         }
     }
 
+    function toggleLoginMode(mode) {
+        if(mode === 'TEACHER') {
+            document.getElementById('studentLoginBox').style.display = "none";
+            document.getElementById('teacherLoginBox').style.display = "block";
+        } else {
+            document.getElementById('studentLoginBox').style.display = "block";
+            document.getElementById('teacherLoginBox').style.display = "none";
+        }
+    }
+
+    // 教師驗證登入
+    function loginTeacher() {
+        let selectedId = document.getElementById('teacherSelect').value;
+        let inputPwd = document.getElementById('teacherPwd').value;
+        let rightPwd = localStorage.getItem(`Teacher_Pwd_${selectedId.split('_')[1]}`);
+
+        if(inputPwd === rightPwd) {
+            currentRole = "TEACHER";
+            activeTeacherId = selectedId;
+            document.getElementById('teacherPwd').value = "";
+            
+            // 介面切換：隱藏學生專用闖關卡、打開教師專用功能、調整文字
+            document.querySelectorAll('.id-student-only').forEach(el => el.style.display = "none");
+            document.querySelectorAll('.id-teacher-only').forEach(el => el.style.display = "block");
+            
+            document.getElementById('statsCardTitle').innerText = "🔍 全校學習歷程調閱機";
+            document.getElementById('statsCardDesc').innerText = "進入管理權限，自由篩選班級、座號，讀取並完美生成任何學生的完整 PDF 學習報告。";
+            
+            document.getElementById('welcomeText').innerText = `👨‍🏫 歡迎登入！系統管理員 [${selectedId.replace('Teacher_','')}號 老師] 已取得完整權限`;
+            document.getElementById('globalLogoutBtn').style.display = "inline-block";
+            
+            // 預先同步建立教師調閱學生時要用的下拉選單結構
+            buildTeacherQueryOptions();
+            showPanel('step1');
+        } else {
+            alert("❌ 密碼有誤！請重新輸入安全憑證密碼。");
+        }
+    }
+
+    function changeTeacherPassword() {
+        let oldP = document.getElementById('oldPwd').value;
+        let newP = document.getElementById('newPwd').value;
+        let idx = activeTeacherId.split('_')[1];
+        let realOld = localStorage.getItem(`Teacher_Pwd_${idx}`);
+
+        if(oldP !== realOld) {
+            alert("❌ 原密碼輸入不正確，拒絕變更！");
+            return;
+        }
+        if(!newP.trim()) {
+            alert("❌ 新密碼不可空白！");
+            return;
+        }
+        localStorage.setItem(`Teacher_Pwd_${idx}`, newP);
+        alert("🎉 密碼變更成功！請妥善保管您的新密碼。");
+        document.getElementById('oldPwd').value = "";
+        document.getElementById('newPwd').value = "";
+        resetToMainMenu(false);
+    }
+
+    function buildTeacherQueryOptions() {
+        const qClass = document.getElementById('queryClass');
+        const qSeat = document.getElementById('querySeat');
+        if(!qClass || !qSeat) return;
+        
+        qClass.innerHTML = ""; qSeat.innerHTML = "";
+        for (let grade = 1; grade <= 6; grade++) {
+            ['A', 'B', 'C', 'D'].forEach(letter => {
+                let val = `${grade}${letter}`;
+                qClass.innerHTML += `<option value="${val}">${val} 班</option>`;
+            });
+        }
+        for (let i = 1; i <= 35; i++) {
+            qSeat.innerHTML += `<option value="${i}">${i} 號</option>`;
+        }
+    }
+
+    // 學生常規登入
     function loginStudent() {
+        currentRole = "STUDENT";
         userRawClass = document.getElementById('loginClass').value;
         userRawSeat = document.getElementById('loginSeat').value;
         
         toggleOverlay(true, `正在跨校聯網絡抓取兩大代數模組數據...`);
-        
-        let keySim = `Simplify_${userRawClass}-${userRawSeat}`;
-        let keyMul = `PolyMulti_${userRawClass}-${userRawSeat}`;
+        fetchStudentCloudData(userRawClass, userRawSeat, () => {
+            toggleOverlay(false);
+            document.querySelectorAll('.id-student-only').forEach(el => el.style.display = "block");
+            document.querySelectorAll('.id-teacher-only').forEach(el => el.style.display = "none");
+            document.getElementById('statsCardTitle').innerText = "📊 學生學習數據";
+            document.getElementById('statsCardDesc').innerText = "同時查詢與統計化簡和展開所有模式的答對率、完整錯題清單，支援匯出 PDF 報告！";
+            
+            document.getElementById('welcomeText').innerText = `👋 歡迎連線！ ${userRawClass} 班 ${userRawSeat} 號 同學`;
+            document.getElementById('globalLogoutBtn').style.display = "inline-block";
+            updateReviewMenuUI();
+            showPanel('step1');
+        });
+    }
+
+    // 核心資料通訊器
+    function fetchStudentCloudData(targetClass, targetSeat, callback) {
+        let keySim = `Simplify_${targetClass}-${targetSeat}`;
+        let keyMul = `PolyMulti_${targetClass}-${targetSeat}`;
 
         Promise.all([
             fetch(GAS_API_URL + "?jsonData=" + encodeURIComponent(JSON.stringify({ action: "load", userKey: keySim }))).then(r => r.json()).catch(()=>null),
@@ -528,22 +712,20 @@
             if(dataSim && dataSim.success && dataSim.stats && dataSim.stats["1"]) {
                 cacheStorage.SIMPLIFY.wrongBook = dataSim.wrongBook || [];
                 cacheStorage.SIMPLIFY.stats = dataSim.stats;
-            } else { initFallbackData("SIMPLIFY"); }
+            } else { initFallbackData("SIMPLIFY", targetClass, targetSeat); }
             if(dataMul && dataMul.success && dataMul.stats && dataMul.stats["1"]) {
                 cacheStorage.MULTIPLY.wrongBook = dataMul.wrongBook || [];
                 cacheStorage.MULTIPLY.stats = dataMul.stats;
-            } else { initFallbackData("MULTIPLY"); }
+            } else { initFallbackData("MULTIPLY", targetClass, targetSeat); }
 
-            localStorage.setItem(`CombinedPolyCache_Sim_${userRawClass}-${userRawSeat}`, JSON.stringify(cacheStorage.SIMPLIFY));
-            localStorage.setItem(`CombinedPolyCache_Mul_${userRawClass}-${userRawSeat}`, JSON.stringify(cacheStorage.MULTIPLY));
-
-            toggleOverlay(false);
-            enterMainMenu();
+            localStorage.setItem(`CombinedPolyCache_Sim_${targetClass}-${targetSeat}`, JSON.stringify(cacheStorage.SIMPLIFY));
+            localStorage.setItem(`CombinedPolyCache_Mul_${targetClass}-${targetSeat}`, JSON.stringify(cacheStorage.MULTIPLY));
+            if(callback) callback();
         });
     }
 
-    function initFallbackData(engine) {
-        let localKey = engine === "SIMPLIFY" ? `CombinedPolyCache_Sim_${userRawClass}-${userRawSeat}` : `CombinedPolyCache_Mul_${userRawClass}-${userRawSeat}`;
+    function initFallbackData(engine, tClass, tSeat) {
+        let localKey = engine === "SIMPLIFY" ? `CombinedPolyCache_Sim_${tClass}-${tSeat}` : `CombinedPolyCache_Mul_${tClass}-${tSeat}`;
         let cached = localStorage.getItem(localKey);
         if(cached) {
             let parsed = JSON.parse(cached);
@@ -553,15 +735,24 @@
         cacheStorage[engine].stats = getInitialStatsObject(engine);
     }
 
-    function enterMainMenu() {
-        document.getElementById('welcomeText').innerText = `👋 歡迎連線！ ${userRawClass} 班 ${userRawSeat} 號 同學`;
-        document.getElementById('globalLogoutBtn').style.display = "inline-block";
-        updateReviewMenuUI();
-        showPanel('step1');
+    // 老師動態調閱任意學生數據
+    function loadTargetStudentDataByTeacher() {
+        let tClass = document.getElementById('queryClass').value;
+        let tSeat = document.getElementById('querySeat').value;
+        
+        toggleOverlay(true, `管理員提取作業中：正在向雲端讀取 ${tClass} 班 ${tSeat} 號 學習檔案...`);
+        fetchStudentCloudData(tClass, tSeat, () => {
+            // 用來在列印/繪製時，將全域定位變數指向被查詢的學生
+            userRawClass = tClass;
+            userRawSeat = tSeat;
+            calculateAndRenderStats(); // 重新將取回的數據刷新表格
+            toggleOverlay(false);
+            alert(`🎉 成功撈取 ${tClass} 班 ${tSeat} 號 數據檔案！已同步更新下方分析報表。`);
+        });
     }
 
     function cloudSaveData() {
-        if (!userRawClass || !userRawSeat) return;
+        if (currentRole === "TEACHER" || !userRawClass || !userRawSeat) return; // 老師查閱不觸發覆寫寫入
         let engineKey = currentEngine === "SIMPLIFY" ? `Simplify_${userRawClass}-${userRawSeat}` : `PolyMulti_${userRawClass}-${userRawSeat}`;
         let localKey = currentEngine === "SIMPLIFY" ? `CombinedPolyCache_Sim_${userRawClass}-${userRawSeat}` : `CombinedPolyCache_Mul_${userRawClass}-${userRawSeat}`;
         
@@ -582,17 +773,19 @@
         });
     }
 
-    function logoutStudent() {
-        if(confirm("確定要切換帳號嗎？資料皆已上傳雲端安全同步。")) {
-            userRawClass = ""; userRawSeat = "";
+    function logoutSession() {
+        if(confirm("確定要登出當前系統嗎？")) {
+            userRawClass = ""; userRawSeat = ""; activeTeacherId = "";
             document.getElementById('globalLogoutBtn').style.display = "none";
             document.getElementById('globalHomeBtn').style.display = "none";
+            // 預設將帳號模式刷回學生
+            toggleLoginMode('STUDENT');
             showPanel('step0_login');
         }
     }
 
     // =========================================================================
-    // 核心代數運行模組 (架構融合控制)
+    // 核心代數運行模組 (控制流)
     // =========================================================================
     let session = {
         currentMode: 'CHALLENGE', endCondition: 'COUNT', totalQuestions: 5, targetScore: 5,
@@ -662,12 +855,17 @@
             renderTypeSelectOptions(); showPanel('step1_challenge');
         } else if (mode === 'SOLVER') {
             showPanel('step1_solver');
+        } else if (mode === 'CHG_PWD') {
+            showPanel('step1_chgpwd');
         } else if (mode === 'REVIEW') {
             let totalWrongs = (cacheStorage.SIMPLIFY.wrongBook || []).length + (cacheStorage.MULTIPLY.wrongBook || []).length;
             if (totalWrongs === 0) return;
             initReviewSession();
         } else if (mode === 'STATS') {
-            calculateAndRenderStats(); showPanel('step_stats_panel');
+            // 調閱數據區：如果目前是老師帳號，則展開上方的動態選單查閱面板，否則藏起來
+            document.getElementById('teacherQueryZone').style.display = (currentRole === "TEACHER") ? "block" : "none";
+            calculateAndRenderStats(); 
+            showPanel('step_stats_panel');
         }
     }
 
@@ -677,9 +875,6 @@
         document.getElementById('targetScoreInputWrapper').style.display = (condition === 'COUNT') ? 'none' : 'block';
     }
 
-    // =========================================================================
-    // 🎲 雙核心題目產生器
-    // =========================================================================
     function generateQuestion(engine, typeCode) {
         let t = typeCode === 'MIX' ? ['1','2','3','4'][Math.floor(Math.random() * 4)] : typeCode;
         let randCoeff = () => { let r = Math.floor(Math.random() * 13) - 6; return r === 0 ? 2 : r; };
@@ -735,9 +930,6 @@
         loadPolynomialToStage();
     }
 
-    // =========================================================================
-    // 🛠️ 雙軌相容手動輸入解析
-    // =========================================================================
     function handleManualSolverInput() {
         let input = document.getElementById('eqInput').value.replace(/\s+/g, '');
         if(!input) { alert('請輸入多項式算式！'); return; }
@@ -957,6 +1149,33 @@
         } else { nextBtn.innerText = "↩️ 講解完畢，返回主選單"; }
     }
 
+    function advanceQuestion() {
+        if (session.currentMode === 'CHALLENGE') {
+            if (session.endCondition === 'COUNT') {
+                if (session.currentIdx < session.questionList.length - 1) {
+                    session.currentIdx++; loadPolynomialToStage();
+                } else { resetToMainMenu(false); }
+            } else {
+                if (session.score >= session.targetScore) {
+                    alert(`🏆 恭喜！已達到目標積分 ${session.targetScore} 分！挑戰完美通關！`);
+                    resetToMainMenu(false);
+                } else {
+                    session.currentIdx++;
+                    session.questionList.push(generateQuestion(currentEngine, session.selectedType));
+                    loadPolynomialToStage();
+                }
+            }
+        } else if (session.currentMode === 'REVIEW') {
+            let combined = [...(cacheStorage.SIMPLIFY.wrongBook || []), ...(cacheStorage.MULTIPLY.wrongBook || [])];
+            if (combined.length === 0 || session.currentIdx >= session.totalQuestions - 1) {
+                alert("🏁 錯題溫習階段結束！"); resetToMainMenu(false);
+            } else {
+                session.currentIdx++; session.totalQuestions = combined.length;
+                session.questionList = combined; loadPolynomialToStage();
+            }
+        } else { resetToMainMenu(false); }
+    }
+
     function startInteractiveSolving() {
         document.getElementById('solveBtn').style.display = "none";
         const zone = document.getElementById('teachingZone');
@@ -1037,7 +1256,7 @@
 
     function executeUnbracketStageSimplify() {
         let userStr = document.getElementById('unbracketInput').value.replace(/\s+/g, '').toLowerCase();
-        let part1 = `${polyData.a}${polyData.v1}${polyData.targetVarType==='v1_v2'?fmtSign(polyData.b)+polyData.v2:fmtSign(polyData.e)}`.replace(/^1/,'').replace(/^-1/,'-');
+        let part1 = `${polyData.a}$ {polyData.v1}${polyData.targetVarType==='v1_v2'?fmtSign(polyData.b)+polyData.v2:fmtSign(polyData.e)}`.replace(/^1/,'').replace(/^-1/,'-');
         let cSign = polyData.sign === '+' ? polyData.c : -polyData.c;
         let dActualSign = polyData.sign === '+' ? polyData.d : -polyData.d;
         let fSign = polyData.sign === '+' ? polyData.f : -polyData.f;
@@ -1064,7 +1283,7 @@
 
         if (currentEngine === 'MULTIPLY') {
             targetFormulaV1 = polyData.step2_formula;
-            html += `<div class="form-group"><label>✏️ 一次項 ${polyData.v1} 的係數加減算式（對照田字格右上與左下格，例如：15+8 Orient）：</label><input type="text" id="coeffV1Input" placeholder="請填入算式"></div>`;
+            html += `<div class="form-group"><label>✏️ 一次項 ${polyData.v1} 的係數加減算式（對照田字格右上與左下格，例如：15+8）：</label><input type="text" id="coeffV1Input" placeholder="請填入算式"></div>`;
         } else {
             let cSign = polyData.sign === '+' ? polyData.c : -polyData.c; targetFormulaV1 = `${polyData.a}${fmtSign(cSign)}`;
             html += `<div class="form-group"><label>✏️ ${polyData.v1} 項的係數合併過程（對照上方黑板，如：${polyData.a}${fmtSign(cSign)}）：</label><input type="text" id="coeffV1Input" placeholder="請填入算式"></div>`;
@@ -1078,18 +1297,6 @@
             }
         }
         group.innerHTML = html;
-    }
-
-    function checkIsFormulaCorrect(userInput, expectedFormula, targetValue) {
-        let cleaned = userInput.replace(/\s+/g, ''); if(!cleaned) return false;
-        if (cleaned == String(targetValue) && cleaned !== expectedFormula && expectedFormula.replace(/\+/g,'') !== cleaned && targetValue !== 0) {
-            alert("💡 提示：此處必須要填入「係數的計算過程算式」（如 6-2），請不要填心算好的單個數字喔！"); return false;
-        }
-        try {
-            if(/[^0-9+\-*/()]/g.test(cleaned)) return false;
-            let userCalcResult = Function('"use strict"; return (' + cleaned + ')')();
-            return userCalcResult === targetValue;
-        } catch(e) { return false; }
     }
 
     function executeCombineStage() {
@@ -1209,7 +1416,8 @@
         const wrongListDiv = document.getElementById('statsAllWrongList');
         if(wrongListDiv) { wrongListDiv.innerHTML = totalWrongHTML; }
         
-        if (userRawClass) {
+        // 渲染 PDF 個人抬頭與列印頂部資訊
+        if (userRawClass && userRawSeat) {
             const printInfo = document.getElementById('printStudentInfo');
             if(printInfo) {
                 printInfo.innerHTML = `
@@ -1218,12 +1426,22 @@
                     <span class="info-span">報告：多項式</span>
                 `;
             }
+        } else {
+            const printInfo = document.getElementById('printStudentInfo');
+            if(printInfo) printInfo.innerHTML = `<span class="info-span" style="color:red;">請先點選上方調閱學生檔案以生成報表</span>`;
         }
         const pDate = document.getElementById('printDate');
         if(pDate) pDate.innerText = `報告產出時間：` + new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
 
-    function exportToPDF() { calculateAndRenderStats(); window.print(); }
+    function exportToPDF() { 
+        if(!userRawClass || !userRawSeat) {
+            alert("❌ 目前尚未讀取任何學生數據，無法完美生成 PDF 檔案！");
+            return;
+        }
+        calculateAndRenderStats(); 
+        window.print(); 
+    }
 
     function renderMathSteps(stepCode) {
         const box = document.getElementById('mathStepBox'); let original = session.questionList[session.currentIdx];
