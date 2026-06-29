@@ -459,7 +459,7 @@
         </table>
 
         <div style="margin-top: 20px;">
-            <h3 style="color: var(--danger);">📘 當前系統未消滅錯題清單</h3>
+            <h3 style="color: var(--danger);">📘 當前系統未消滅錯題清單 (共計 <span id="statsWrongCount">0</span> 題)</h3>
             <div id="statsAllWrongList" style="background: #f8fafc; padding:20px; border-radius:8px; border:1px solid #cbd5e1; font-family:monospace; font-size:15px; line-height:1.8;">
                 加載中...
             </div>
@@ -491,7 +491,6 @@
         MULTIPLY: { wrongBook: [], stats: {} }
     };
 
-    // 強制初始化預設乾淨統計結構
     cacheStorage.SIMPLIFY.stats = getInitialStatsObject("SIMPLIFY");
     cacheStorage.MULTIPLY.stats = getInitialStatsObject("MULTIPLY");
 
@@ -534,12 +533,10 @@
             fetch(GAS_API_URL + "?jsonData=" + encodeURIComponent(JSON.stringify({ action: "load", userKey: keySim }))).then(r => r.json()).catch(()=>null),
             fetch(GAS_API_URL + "?jsonData=" + encodeURIComponent(JSON.stringify({ action: "load", userKey: keyMul }))).then(r => r.json()).catch(()=>null)
         ]).then(([dataSim, dataMul]) => {
-            // 完美解析化簡數據
             if(dataSim && dataSim.success && dataSim.stats && dataSim.stats["1"]) {
                 cacheStorage.SIMPLIFY.wrongBook = dataSim.wrongBook || [];
                 cacheStorage.SIMPLIFY.stats = dataSim.stats;
             } else { initFallbackData("SIMPLIFY"); }
-            // 完美解析展開數據
             if(dataMul && dataMul.success && dataMul.stats && dataMul.stats["1"]) {
                 cacheStorage.MULTIPLY.wrongBook = dataMul.wrongBook || [];
                 cacheStorage.MULTIPLY.stats = dataMul.stats;
@@ -623,7 +620,7 @@
     ];
 
     function updateReviewMenuUI() {
-        let wrongCount = cacheStorage[currentEngine].wrongBook.length;
+        let wrongCount = (cacheStorage.SIMPLIFY.wrongBook || []).length + (cacheStorage.MULTIPLY.wrongBook || []).length;
         const card = document.getElementById('reviewModeCard');
         const badge = document.getElementById('reviewBadge');
         if (wrongCount > 0) {
@@ -646,6 +643,7 @@
 
     function renderTypeSelectOptions() {
         const select = document.getElementById('typeSelect');
+        if (!select) return;
         select.innerHTML = '';
         if (currentEngine === 'SIMPLIFY') {
             select.innerHTML = `
@@ -673,7 +671,8 @@
         } else if (mode === 'SOLVER') {
             showPanel('step1_solver');
         } else if (mode === 'REVIEW') {
-            if (cacheStorage[currentEngine].wrongBook.length === 0) return;
+            let totalWrongs = (cacheStorage.SIMPLIFY.wrongBook || []).length + (cacheStorage.MULTIPLY.wrongBook || []).length;
+            if (totalWrongs === 0) return;
             initReviewSession();
         } else if (mode === 'STATS') {
             calculateAndRenderStats(); showPanel('step_stats_panel');
@@ -737,8 +736,11 @@
     }
 
     function initReviewSession() {
-        session.currentIdx = 0; session.totalQuestions = cacheStorage[currentEngine].wrongBook.length;
-        session.questionList = [...cacheStorage[currentEngine].wrongBook]; loadPolynomialToStage();
+        session.currentIdx = 0; 
+        let combined = [...(cacheStorage.SIMPLIFY.wrongBook || []), ...(cacheStorage.MULTIPLY.wrongBook || [])];
+        session.totalQuestions = combined.length;
+        session.questionList = combined; 
+        loadPolynomialToStage();
     }
 
     // =========================================================================
@@ -852,7 +854,18 @@
         document.getElementById('initialFeedbackArea').innerHTML = '';
         document.getElementById('submitAnsBtn').innerText = "提交結果並驗證"; document.getElementById('submitAnsBtn').className = "";
         
-        let currentExpr = session.questionList[session.currentIdx]; if(!parseMathStructure(currentExpr)) return;
+        let currentExpr = session.questionList[session.currentIdx]; 
+        
+        // 錯題溫習模式下，動態切換引擎
+        if(session.currentMode === 'REVIEW') {
+            if (currentExpr.includes(')(') || (/^[+-]?\d*[a-zA-Z]?\(/.test(currentExpr) && !currentExpr.includes(')+(') && !currentExpr.includes(')-('))) {
+                currentEngine = 'MULTIPLY';
+            } else {
+                currentEngine = 'SIMPLIFY';
+            }
+        }
+
+        if(!parseMathStructure(currentExpr)) return;
 
         if(session.currentMode === 'CHALLENGE') {
             cacheStorage[currentEngine].stats[session.currentTypeNum].total++; cloudSaveData(); 
@@ -867,7 +880,7 @@
             document.getElementById('typeBadgeText').style.display = "inline-block";
             document.getElementById('scoreText').innerText = `目前積分：${session.score} 分`; document.getElementById('scoreText').style.display = "inline-block";
         } else if (session.currentMode === 'REVIEW') {
-            progBannerText = `📘 錯題重溫中：第 ${session.currentIdx + 1} / ${session.totalQuestions} 題`;
+            progBannerText = `📘 雙模組錯題重溫中：第 ${session.currentIdx + 1} / ${session.totalQuestions} 題`;
             document.getElementById('scoreText').style.display = "none";
         } else {
             progBannerText = `🛠️ 智慧型整合多項式逐步解答模式`; document.getElementById('scoreText').style.display = "none";
@@ -927,7 +940,9 @@
             feedback.innerHTML = `🎉 完全正確！`;
         } else if (session.currentMode === 'REVIEW') {
             let currentExpr = session.questionList[session.currentIdx];
-            cacheStorage[currentEngine].wrongBook = cacheStorage[currentEngine].wrongBook.filter(item => item !== currentExpr);
+            // 同步將該錯題從對應的數據庫中移除
+            cacheStorage.SIMPLIFY.wrongBook = (cacheStorage.SIMPLIFY.wrongBook || []).filter(item => item !== currentExpr);
+            cacheStorage.MULTIPLY.wrongBook = (cacheStorage.MULTIPLY.wrongBook || []).filter(item => item !== currentExpr);
             cloudSaveData();
             feedback.innerHTML = `🎉 戰勝魔王！此題成功從雲端錯題本完全消滅！`;
         } else { feedback.innerHTML = `🎉 計算完全正確！概念非常紮實。`; }
@@ -950,7 +965,8 @@
         if (session.currentMode === 'CHALLENGE') {
             nextBtn.innerText = (session.currentIdx < session.questionList.length - 1) ? "前進下一題 ➡️" : "↩️ 挑戰結束，返回主選單";
         } else if (session.currentMode === 'REVIEW') {
-            nextBtn.innerText = (session.currentIdx === cacheStorage[currentEngine].wrongBook.length - 1 || cacheStorage[currentEngine].wrongBook.length === 0) ? "🏁 結束溫習返回主選單" : "前進下一道魔王題 ➡️";
+            let totalWrongs = (cacheStorage.SIMPLIFY.wrongBook || []).length + (cacheStorage.MULTIPLY.wrongBook || []).length;
+            nextBtn.innerText = (session.currentIdx === session.totalQuestions - 1 || totalWrongs === 0) ? "🏁 結束溫習返回主選單" : "前進下一道魔王題 ➡️";
         } else { nextBtn.innerText = "↩️ 講解完畢，返回主選單"; }
     }
 
@@ -1141,35 +1157,31 @@
     }
 
     // =========================================================================
-    // 📊 【全面修復】全模組雙機制數據並存渲染核心
+    // 📊 【完全修復版】全模組雙機制數據渲染
     // =========================================================================
     function calculateAndRenderStats() {
         const tbody = document.getElementById('statsTableBody');
-        tbody.innerHTML = ''; // 清空大表格
+        if (!tbody) return;
+        tbody.innerHTML = ''; 
 
-        // 🌟 強制從記憶體核心對象直接提取兩份完整的數據對象，確保不被互相覆蓋
         const enginesToRender = [
             { key: "SIMPLIFY", name: "多項式變數化簡機 (加減法雲端數據庫)" },
             { key: "MULTIPLY", name: "多項式乘法展開機 (田字魔法陣數據庫)" }
         ];
 
         enginesToRender.forEach(engineBlock => {
-            // 建立大模組的專屬藍色橫列標題
             let sectionTr = document.createElement('tr');
             sectionTr.className = "section-title";
             sectionTr.innerHTML = `<th colspan="7">🌀 ${engineBlock.name}</th>`;
             tbody.appendChild(sectionTr);
 
-            // 讀取該引擎下所有的子題型
             let statsDataObj = cacheStorage[engineBlock.key].stats;
             
-            // 💡 安全防呆：如果因為連線異常導致對象為空，則重新生成一筆
             if (!statsDataObj || Object.keys(statsDataObj).length === 0) {
                 statsDataObj = getInitialStatsObject(engineBlock.key);
                 cacheStorage[engineBlock.key].stats = statsDataObj;
             }
 
-            // 逐行填入 4 個題型數據
             for (let key in statsDataObj) {
                 let row = statsDataObj[key];
                 let firstRate = row.total > 0 ? Math.round((row.firstMatch / row.total) * 100) + '%' : '0%';
@@ -1189,7 +1201,6 @@
             }
         });
 
-        // 匯整雙軌錯題本
         let simWrong = cacheStorage.SIMPLIFY.wrongBook || [];
         let mulWrong = cacheStorage.MULTIPLY.wrongBook || [];
         let totalWrongHTML = "";
@@ -1207,13 +1218,20 @@
                 mulWrong.forEach((prob, i) => { totalWrongHTML += `<div style="padding-left:15px;">❌ 題 ${i+1}：${prob}</div>`; });
             }
         }
-        document.getElementById('statsWrongCount').innerText = simWrong.length + mulWrong.length;
-        document.getElementById('statsAllWrongList').innerHTML = totalWrongHTML;
+        
+        // 🔒 安全容錯防卡死控制
+        const countBadge = document.getElementById('statsWrongCount');
+        if(countBadge) { countBadge.innerText = simWrong.length + mulWrong.length; }
+        
+        const wrongListDiv = document.getElementById('statsAllWrongList');
+        if(wrongListDiv) { wrongListDiv.innerHTML = totalWrongHTML; }
         
         if (userRawClass) {
-            document.getElementById('printStudentInfo').innerText = `學生班別：${userRawClass} 班 &nbsp;&nbsp;&nbsp;&nbsp; 學號：${userRawSeat} 號 &nbsp;&nbsp;&nbsp;&nbsp; 報告：全功能綜合歷程報告`;
+            const printInfo = document.getElementById('printStudentInfo');
+            if(printInfo) printInfo.innerText = `學生班別：${userRawClass} 班 &nbsp;&nbsp;&nbsp;&nbsp; 學號：${userRawSeat} 號 &nbsp;&nbsp;&nbsp;&nbsp; 報告：全功能綜合歷程報告`;
         }
-        document.getElementById('printDate').innerText = `報告產出時間：` + new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const pDate = document.getElementById('printDate');
+        if(pDate) pDate.innerText = `報告產出時間：` + new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
 
     function exportToPDF() { calculateAndRenderStats(); window.print(); }
