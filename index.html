@@ -225,7 +225,6 @@
 <button id="globalLogoutBtn" class="logout-btn" onclick="logoutSession()">🚪 登出系統</button>
 
 <div class="container">
-    <!-- PDF 專用列印頁首 -->
     <div class="print-only-header">
         <h1>🔮 多項式 - 學生學習報告</h1>
         <h2 id="printStudentInfo" style="color:#111;">學生班別：載入中...</h2>
@@ -235,9 +234,7 @@
     <h1 class="non-print">🔮 多項式</h1>
     <hr class="non-print" style="border: 0; height: 1px; background: #ddd; margin-bottom: 20px;">
 
-    <!-- 登入介面面板 (區分為學生/教師雙模式) -->
     <div id="step0_login" class="step-panel active">
-        <!-- 學生登入視窗 -->
         <div id="studentLoginBox">
             <h2 style="margin-bottom: 20px;">👤 學生登入</h2>
             <div class="form-group">
@@ -274,7 +271,6 @@
             <div class="toggle-login-mode" onclick="toggleLoginMode('TEACHER')">🔐 切換至教師管理員登入</div>
         </div>
 
-        <!-- 教師登入視窗 -->
         <div id="teacherLoginBox" style="display: none;">
             <h2 style="margin-bottom: 20px; color: var(--teacher-color);">🔑 教師管理員登入</h2>
             <div class="form-group">
@@ -289,14 +285,13 @@
             </div>
             <div class="form-group">
                 <label for="teacherPwd">🔒 請輸入安全密碼：</label>
-                <input type="password" id="teacherPwd" placeholder="請輸入密碼 (初始為1007)">
+                <input type="password" id="teacherPwd" placeholder="請輸入密碼">
             </div>
             <button id="teacherLoginBtn" onclick="loginTeacher()" class="btn-purple" style="font-size: 18px; margin-top: 10px;">教師權限驗證登入 🔓</button>
             <div class="toggle-login-mode" onclick="toggleLoginMode('STUDENT')">🎒 切換回學生學習登入</div>
         </div>
     </div>
 
-    <!-- 主選單介面 (學生與教師共用，教師增強功能) -->
     <div id="step1" class="step-panel">
         <h2 id="welcomeText" style="color: var(--success);">歡迎前來學習！</h2>
         <div class="mode-selection-box">
@@ -316,7 +311,6 @@
                 <h3 id="statsCardTitle">📊 學生學習數據</h3>
                 <p id="statsCardDesc">同時查詢與統計化簡和展開所有模式的答對率、完整錯題清單，支援匯出 PDF 報告！</p>
             </div>
-            <!-- 教師專屬：變更密碼功能卡 -->
             <div class="mode-card id-teacher-only" onclick="switchSetupConfig('CHG_PWD')" style="border-color: var(--warning); display: none;">
                 <h3>⚙️ 變更管理密碼</h3>
                 <p>修改目前登入的教師帳號密碼，確保數據調閱權限的安全。</p>
@@ -324,7 +318,6 @@
         </div>
     </div>
 
-    <!-- 教師專屬：修改密碼介面 -->
     <div id="step1_chgpwd" class="step-panel">
         <h2 style="color: var(--teacher-color);">⚙️ 修改教師管理密碼</h2>
         <div class="form-group">
@@ -339,7 +332,6 @@
         <button class="btn-secondary" onclick="resetToMainMenu(false)">取消返回</button>
     </div>
 
-    <!-- 闖關模式設定 -->
     <div id="step1_challenge" class="step-panel">
         <h2>🎮 闖關模式設定</h2>
         <div class="form-group">
@@ -383,7 +375,6 @@
         <button onclick="initChallengeSession()" style="background-color: var(--success); font-size: 18px;">🎲 建立關卡，出發！</button>
     </div>
 
-    <!-- 解答模式 -->
     <div id="step1_solver" class="step-panel">
         <h2>🛠️ 解答模式</h2>
         <div class="form-group">
@@ -393,7 +384,6 @@
         <button onclick="handleManualSolverInput()" style="font-size: 18px;">開始逐步教學引導</button>
     </div>
 
-    <!-- 答題核心舞台 -->
     <div id="step2" class="step-panel">
         <div class="progress-banner">
             <span id="progressText">進度：載入中...</span>
@@ -412,7 +402,6 @@
         <button id="submitAnsBtn" onclick="checkFirstAnswer()">提交結果並驗證</button>
     </div>
 
-    <!-- 逐步動態引導與黑板 -->
     <div id="step3" class="step-panel">
         <div class="progress-banner">
             <span id="progressTextStage3">進度：載入中...</span>
@@ -488,11 +477,9 @@
         <button id="nextBtn" class="btn-success" onclick="advanceQuestion()" style="display:none; margin-top:20px;">前進下一題 ➡️</button>
     </div>
 
-    <!-- 📊 學生學習數據面板 (教師模式時，上方出現動態選單供調閱各學生檔案) -->
     <div id="step_stats_panel" class="step-panel">
         <h2 style="margin-bottom:10px;">📊 學生學習數據</h2>
         
-        <!-- 教師專屬：調閱學生過濾器 -->
         <div id="teacherQueryZone" class="non-print" style="background: #f3e8ff; padding: 15px; border-radius: 10px; border: 2px dashed var(--teacher-color); margin-bottom: 20px; display: none;">
             <p style="margin: 0 0 10px 0; font-weight: bold; color: var(--teacher-color); font-size: 16px;">🔍 教師查閱功能：請選取欲調閱的學生數據</p>
             <div style="display:flex; gap:15px; flex-wrap:wrap;">
@@ -538,7 +525,6 @@
         </div>
     </div>
 
-    <!-- 頁尾宣告 -->
     <div class="print-footer">
         <p>數學練習整合系統©2026 羅坤山老師</p>
     </div>
@@ -742,17 +728,16 @@
         
         toggleOverlay(true, `管理員提取作業中：正在向雲端讀取 ${tClass} 班 ${tSeat} 號 學習檔案...`);
         fetchStudentCloudData(tClass, tSeat, () => {
-            // 用來在列印/繪製時，將全域定位變數指向被查詢的學生
             userRawClass = tClass;
             userRawSeat = tSeat;
-            calculateAndRenderStats(); // 重新將取回的數據刷新表格
+            calculateAndRenderStats(); 
             toggleOverlay(false);
             alert(`🎉 成功撈取 ${tClass} 班 ${tSeat} 號 數據檔案！已同步更新下方分析報表。`);
         });
     }
 
     function cloudSaveData() {
-        if (currentRole === "TEACHER" || !userRawClass || !userRawSeat) return; // 老師查閱不觸發覆寫寫入
+        if (currentRole === "TEACHER" || !userRawClass || !userRawSeat) return; 
         let engineKey = currentEngine === "SIMPLIFY" ? `Simplify_${userRawClass}-${userRawSeat}` : `PolyMulti_${userRawClass}-${userRawSeat}`;
         let localKey = currentEngine === "SIMPLIFY" ? `CombinedPolyCache_Sim_${userRawClass}-${userRawSeat}` : `CombinedPolyCache_Mul_${userRawClass}-${userRawSeat}`;
         
@@ -778,7 +763,6 @@
             userRawClass = ""; userRawSeat = ""; activeTeacherId = "";
             document.getElementById('globalLogoutBtn').style.display = "none";
             document.getElementById('globalHomeBtn').style.display = "none";
-            // 預設將帳號模式刷回學生
             toggleLoginMode('STUDENT');
             showPanel('step0_login');
         }
@@ -862,7 +846,6 @@
             if (totalWrongs === 0) return;
             initReviewSession();
         } else if (mode === 'STATS') {
-            // 調閱數據區：如果目前是老師帳號，則展開上方的動態選單查閱面板，否則藏起來
             document.getElementById('teacherQueryZone').style.display = (currentRole === "TEACHER") ? "block" : "none";
             calculateAndRenderStats(); 
             showPanel('step_stats_panel');
@@ -1256,7 +1239,7 @@
 
     function executeUnbracketStageSimplify() {
         let userStr = document.getElementById('unbracketInput').value.replace(/\s+/g, '').toLowerCase();
-        let part1 = `${polyData.a}$ {polyData.v1}${polyData.targetVarType==='v1_v2'?fmtSign(polyData.b)+polyData.v2:fmtSign(polyData.e)}`.replace(/^1/,'').replace(/^-1/,'-');
+        let part1 = `${polyData.a}${polyData.v1}${polyData.targetVarType==='v1_v2'?fmtSign(polyData.b)+polyData.v2:fmtSign(polyData.e)}`.replace(/^1/,'').replace(/^-1/,'-');
         let cSign = polyData.sign === '+' ? polyData.c : -polyData.c;
         let dActualSign = polyData.sign === '+' ? polyData.d : -polyData.d;
         let fSign = polyData.sign === '+' ? polyData.f : -polyData.f;
@@ -1297,6 +1280,18 @@
             }
         }
         group.innerHTML = html;
+    }
+
+    function checkIsFormulaCorrect(userStr, targetStr, expectedValue) {
+        try {
+            let cleanUser = userStr.replace(/\s+/g, '');
+            if (!cleanUser) return false;
+            let userVal = Function(`return (${cleanUser})`)();
+            if (userVal !== expectedValue) return false;
+            let normUser = cleanUser.replace(/^-/, '').split(/[+-]/).sort().join(',');
+            let normTarget = targetStr.replace(/^-/, '').split(/[+-]/).sort().join(',');
+            return true;
+        } catch(e) { return false; }
     }
 
     function executeCombineStage() {
@@ -1416,7 +1411,6 @@
         const wrongListDiv = document.getElementById('statsAllWrongList');
         if(wrongListDiv) { wrongListDiv.innerHTML = totalWrongHTML; }
         
-        // 渲染 PDF 個人抬頭與列印頂部資訊
         if (userRawClass && userRawSeat) {
             const printInfo = document.getElementById('printStudentInfo');
             if(printInfo) {
