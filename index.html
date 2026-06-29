@@ -147,6 +147,9 @@
         table.stats-table tr.section-title th { background: #2b5797 !important; color: white !important; text-align: left; font-size: 16px; padding-left: 15px; }
         .btn-group { display: flex; gap: 15px; margin-top: 20px; }
 
+        /* 資訊間隔樣式 */
+        .info-span { margin-right: 30px; display: inline-block; }
+
         /* 田字格專屬響應式排版 */
         .grid-table {
             display: grid;
@@ -856,7 +859,6 @@
         
         let currentExpr = session.questionList[session.currentIdx]; 
         
-        // 錯題溫習模式下，動態切換引擎
         if(session.currentMode === 'REVIEW') {
             if (currentExpr.includes(')(') || (/^[+-]?\d*[a-zA-Z]?\(/.test(currentExpr) && !currentExpr.includes(')+(') && !currentExpr.includes(')-('))) {
                 currentEngine = 'MULTIPLY';
@@ -890,9 +892,6 @@
         showPanel('step2');
     }
 
-    // =========================================================================
-    // 🎛️ 答案驗證核心
-    // =========================================================================
     function checkFirstAnswer() {
         let userAns = document.getElementById('ansInput').value;
         if(!userAns.trim()) { alert('答案不可以留白喔！'); return; }
@@ -940,7 +939,6 @@
             feedback.innerHTML = `🎉 完全正確！`;
         } else if (session.currentMode === 'REVIEW') {
             let currentExpr = session.questionList[session.currentIdx];
-            // 同步將該錯題從對應的數據庫中移除
             cacheStorage.SIMPLIFY.wrongBook = (cacheStorage.SIMPLIFY.wrongBook || []).filter(item => item !== currentExpr);
             cacheStorage.MULTIPLY.wrongBook = (cacheStorage.MULTIPLY.wrongBook || []).filter(item => item !== currentExpr);
             cloudSaveData();
@@ -970,9 +968,6 @@
         } else { nextBtn.innerText = "↩️ 講解完畢，返回主選單"; }
     }
 
-    // =========================================================================
-    // 🔮 逐步解題引導與互動控制
-    // =========================================================================
     function startInteractiveSolving() {
         document.getElementById('solveBtn').style.display = "none";
         const zone = document.getElementById('teachingZone');
@@ -1157,7 +1152,7 @@
     }
 
     // =========================================================================
-    // 📊 【完全修復版】全模組雙機制數據渲染
+    // 📊 【完全修復版】全模組雙機制數據渲染 (移除 &nbsp;)
     // =========================================================================
     function calculateAndRenderStats() {
         const tbody = document.getElementById('statsTableBody');
@@ -1219,16 +1214,22 @@
             }
         }
         
-        // 🔒 安全容錯防卡死控制
         const countBadge = document.getElementById('statsWrongCount');
         if(countBadge) { countBadge.innerText = simWrong.length + mulWrong.length; }
         
         const wrongListDiv = document.getElementById('statsAllWrongList');
         if(wrongListDiv) { wrongListDiv.innerHTML = totalWrongHTML; }
         
+        // 🌟 使用 info-span 樣式類別取代原始 &nbsp;，根除字元亂碼問題
         if (userRawClass) {
             const printInfo = document.getElementById('printStudentInfo');
-            if(printInfo) printInfo.innerText = `學生班別：${userRawClass} 班 &nbsp;&nbsp;&nbsp;&nbsp; 學號：${userRawSeat} 號 &nbsp;&nbsp;&nbsp;&nbsp; 報告：全功能綜合歷程報告`;
+            if(printInfo) {
+                printInfo.innerHTML = `
+                    <span class="info-span">學生班別：${userRawClass} 班</span>
+                    <span class="info-span">學號：${userRawSeat} 號</span>
+                    <span class="info-span">報告：全功能綜合歷程報告</span>
+                `;
+            }
         }
         const pDate = document.getElementById('printDate');
         if(pDate) pDate.innerText = `報告產出時間：` + new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -1258,7 +1259,7 @@
 
             if(stepCode >= 2) html += `<div class="${stepCode===2?'active-line':''}">[去括號變號] = ${s2}</div>`;
             let s3 = polyData.targetVarType === 'v1_v2' ? `(${polyData.a}${fmtSign(cSign)})${polyData.v1} + (${polyData.b}${fmtSign(dAct)})${polyData.v2}` : `(${polyData.a}${fmtSign(cSign)})${polyData.v1} + (${polyData.e}${fmtSign(fSign)})`;
-            if(stepCode >= 3) html += `<div class="${stepCode===3?'active-line':''}">[同類項分組] = ${s3}</div>`;
+            if(stepCode >= 3) html += `<div class="${stepCode >= 3?'active-line':''}">[同類項分組] = ${s3}</div>`;
             if(stepCode >= 4) html += `<div class="active-line">[最簡多項式] = ${polyData.ansStr} 🎯</div>`;
             box.innerHTML = html;
         }
