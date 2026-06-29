@@ -309,7 +309,7 @@
             </div>
             <div class="mode-card id-student-only" onclick="switchSetupConfig('SOLVER')">
                 <h3>🛠️ 解答模式</h3>
-                <p>手動輸入任何化簡式或乘法算式，系統將智慧辨識並提供專屬的破譯解說！</p>
+                <p>手動輸入任何化簡式或乘法算式，系統將智慧辨識並提供專專屬的破譯解說！</p>
             </div>
             <div id="reviewModeCard" class="mode-card disabled id-student-only" onclick="switchSetupConfig('REVIEW')">
                 <h3>📘 錯題溫習模式<span id="reviewBadge" class="badge-count" style="display:none;">0</span></h3>
@@ -530,11 +530,7 @@
                 </table>
 
                 <div style="margin-top: 20px;">
-                    <h3 style="color: var(--danger);" class="non-print">📘 當前系統未消滅錯題清單 (共計 <span id="statsWrongCount">0</span> 題)</h3>
-                    <h3 style="color: #333; display:none;" class="print-only-title">📘 未消滅錯題追蹤本</h3>
-                    <div id="statsAllWrongList" style="background: #f8fafc; padding:20px; border-radius:8px; border:1px solid #cbd5e1; font-family:monospace; font-size:15px; line-height:1.8;">
-                        加載中...
-                    </div>
+                    <h3 style="color: var(--danger);">📘 當前系統未消滅錯題 (共計 <span id="statsWrongCount">0</span> 題)</h3>
                 </div>
                 
                 <div class="print-footer">
@@ -758,7 +754,7 @@
         });
     }
 
-    // 【新增核心功能】教師端：一次性循序同步撈取全班 1~35 號之資料包
+    // 教師端：一次性循序同步撈取全班 1~35 號之資料包
     function loadWholeClassDataForPrint() {
         let tClass = document.getElementById('queryClass').value;
         if(!confirm(`確定要同步排隊抓取整個 ${tClass} 班 (1~35號) 的雲端學習紀錄嗎？\n資料量較大，撈取完成後會直接渲染出含有「強制分頁」的整合型報告。`)) return;
@@ -827,11 +823,7 @@
                     <tbody id="statsTableBody"></tbody>
                 </table>
                 <div style="margin-top: 20px;">
-                    <h3 style="color: var(--danger);" class="non-print">📘 當前系統未消滅錯題清單 (共計 <span id="statsWrongCount">0</span> 題)</h3>
-                    <h3 style="color: #333; display:none;" class="print-only-title">📘 未消滅錯題追蹤本</h3>
-                    <div id="statsAllWrongList" style="background: #f8fafc; padding:20px; border-radius:8px; border:1px solid #cbd5e1; font-family:monospace; font-size:15px; line-height:1.8;">
-                        加載中...
-                    </div>
+                    <h3 style="color: var(--danger);">📘 當前系統未消滅錯題 (共計 <span id="statsWrongCount">0</span> 題)</h3>
                 </div>
                 <div class="print-footer">
                     <p>數學練習整合系統©2026 羅坤山老師</p>
@@ -879,23 +871,9 @@
                 }
             });
 
-            // 組裝錯題本
             let simWrongs = student.SIMPLIFY.wrongBook || [];
             let mulWrongs = student.MULTIPLY.wrongBook || [];
-            let wrongHTML = "";
-            if(simWrongs.length === 0 && mulWrongs.length === 0) {
-                wrongHTML = "🎉 雲端所有模式均無殘留錯題，表現完美！";
-            } else {
-                if (simWrongs.length > 0) {
-                    wrongHTML += `<div style="font-weight:bold; color:var(--primary); margin-bottom:5px;">[化簡加減式錯題]</div>`;
-                    simWrongs.forEach((prob, i) => { wrongHTML += `<div style="padding-left:15px;">❌ 題 ${i+1}：${prob}</div>`; });
-                }
-                if (mulWrongs.length > 0) {
-                    if (simWrongs.length > 0) wrongHTML += `<div style="margin-top:10px;"></div>`;
-                    wrongHTML += `<div style="font-weight:bold; color:var(--primary); margin-bottom:5px;">[乘法展開式錯題]</div>`;
-                    mulWrongs.forEach((prob, i) => { wrongHTML += `<div style="padding-left:15px;">❌ 題 ${i+1}：${prob}</div>`; });
-                }
-            }
+            let totalWrongCount = simWrongs.length + mulWrongs.length;
 
             pageDiv.innerHTML = `
                 <div class="print-only-header" style="display:block;">
@@ -923,10 +901,7 @@
                     <tbody>${tableRowsHTML}</tbody>
                 </table>
                 <div style="margin-top: 15px;">
-                    <h4 style="color:var(--danger); margin-bottom:5px;">📘 未消滅錯題追蹤本 (共計 ${simWrongs.length + mulWrongs.length} 題)</h4>
-                    <div style="background: #f8fafc; padding:15px; border-radius:8px; border:1px solid #cbd5e1; font-family:monospace; font-size:14px; line-height:1.6;">
-                        ${wrongHTML}
-                    </div>
+                    <h4 style="color:var(--danger); margin-bottom:5px;">📘 當前系統未消滅錯題 (共計 ${totalWrongCount} 題)</h4>
                 </div>
                 <div class="print-footer">
                     <p>數學練習整合系統©2026 羅坤山老師</p>
@@ -1537,7 +1512,7 @@
 
     function resetToMainMenu(needConfirm = false) {
         let confirmLeave = true;
-        if(needConfirm && (session.currentMode === 'CHALLENGE' || session.currentMode === 'REVIEW') && (document.getElementById('step2').classList.contains('active') || document.getElementById('step3').classList.contains('active'))) {
+        if(needConfirm && (session.currentMode === 'CHALLENGE' || session.currentMode === 'REVIEW') && (document.getElementById('step2').classList.contains('active' ) || document.getElementById('step3').classList.contains('active'))) {
             confirmLeave = confirm("確定要中止測驗返回主選單嗎？未完結的分數將不予記錄。");
         }
         if(confirmLeave) {
@@ -1591,27 +1566,9 @@
 
         let simWrong = cacheStorage.SIMPLIFY.wrongBook || [];
         let mulWrong = cacheStorage.MULTIPLY.wrongBook || [];
-        let totalWrongHTML = "";
-
-        if (simWrong.length === 0 && mulWrong.length === 0) {
-            totalWrongHTML = '🎉 雲端所有模式均無殘留錯題，表現完美！';
-        } else {
-            if (simWrong.length > 0) {
-                totalWrongHTML += `<div style="font-weight:bold; color:var(--primary); margin-bottom:5px;">[化簡加減式錯題]</div>`;
-                simWrong.forEach((prob, i) => { totalWrongHTML += `<div style="padding-left:15px;">❌ 題 ${i+1}：${prob}</div>`; });
-            }
-            if (mulWrong.length > 0) {
-                if (simWrong.length > 0) totalWrongHTML += `<div style="margin-top:10px;"></div>`;
-                totalWrongHTML += `<div style="font-weight:bold; color:var(--primary); margin-bottom:5px;">[乘法展開式錯題]</div>`;
-                mulWrong.forEach((prob, i) => { totalWrongHTML += `<div style="padding-left:15px;">❌ 題 ${i+1}：${prob}</div>`; });
-            }
-        }
         
         const countBadge = document.getElementById('statsWrongCount');
         if(countBadge) { countBadge.innerText = simWrong.length + mulWrong.length; }
-        
-        const wrongListDiv = document.getElementById('statsAllWrongList');
-        if(wrongListDiv) { wrongListDiv.innerHTML = totalWrongHTML; }
         
         if (userRawClass && userRawSeat) {
             const printInfo = document.getElementById('printStudentInfo');
