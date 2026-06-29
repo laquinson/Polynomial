@@ -225,13 +225,13 @@
         <p id="printDate">產出日期：載入中...</p>
     </div>
 
-    <h1 class="non-print">🔮 多項式代數大師 (雙引擎二合一版)</h1>
+    <h1 class="non-print">🔮 多項式</h1>
     <hr class="non-print" style="border: 0; height: 1px; background: #ddd; margin-bottom: 20px;">
 
     <div id="step0_login" class="step-panel active">
         <h2 style="margin-bottom: 20px;">👤 學生數據個人化登入 (多核心數據庫互通版)</h2>
         <div class="supported-types" style="text-align: center;">
-            💡 本系統已整合 <b>多項式化簡(加減)</b> 與 <b>多項式展開(乘法)</b> 功能，進度將依據模組完美儲存於 Google 雲端試算表。
+            💡 本系統已整合 <b>多項式化簡</b> 與 <b>多項式展開</b> 功能，進度將依據模組完美儲存於 Google 雲端試算表。
         </div>
         <div class="form-group">
             <label for="loginClass">🏫 請選取您的班別：</label>
@@ -274,7 +274,7 @@
                 <p>自由選擇「化簡」或「展開」關卡，自動生成各式組合、計分與原地補答修正！</p>
             </div>
             <div class="mode-card" onclick="switchSetupConfig('SOLVER')">
-                <h3>🛠️ 智能解答逐步教學</h3>
+                <h3>🛠️ 解答模式</h3>
                 <p>手動輸入任何化簡式或乘法算式，系統將智慧辨識並提供專屬的破譯解說！</p>
             </div>
             <div id="reviewModeCard" class="mode-card disabled" onclick="switchSetupConfig('REVIEW')">
@@ -282,7 +282,7 @@
                 <p>針對您當前核心模組答錯的魔王題進行重溫，答對即可從錯題本消滅！</p>
             </div>
             <div class="mode-card" onclick="switchSetupConfig('STATS')" style="border-color: var(--info);">
-                <h3>📊 學習歷程數據</h3>
+                <h3>📊 學生學習數據</h3>
                 <p>同時查詢與統計<b>化簡和展開所有模式</b>的答對率、完整錯題清單，支援匯出 PDF 報告！</p>
             </div>
         </div>
@@ -294,10 +294,10 @@
             <label>🧭 請選取挑戰的代數核心機制：</label>
             <div class="radio-group" style="background:#e0f2fe;">
                 <label class="radio-option">
-                    <input type="radio" name="gameEngine" value="SIMPLIFY" checked onchange="onGameEngineChange()"> 🔮 1. 多項式隨機變數化簡機 (加減法)
+                    <input type="radio" name="gameEngine" value="SIMPLIFY" checked onchange="onGameEngineChange()"> 🔮 1. 多項式化簡
                 </label>
                 <label class="radio-option">
-                    <input type="radio" name="gameEngine" value="MULTIPLY" onchange="onGameEngineChange()"> 📐 2. 多項式田字魔法展開機 (乘法)
+                    <input type="radio" name="gameEngine" value="MULTIPLY" onchange="onGameEngineChange()"> 📐 2. 多項式展開
                 </label>
             </div>
         </div>
@@ -333,12 +333,7 @@
     </div>
 
     <div id="step1_solver" class="step-panel">
-        <h2>🛠️ 智能解答模式（智慧相容出題）</h2>
-        <div class="supported-types">
-            <strong>💡 系統會自動辨識輸入的結構，支援任意英文字母變數組合：</strong><br>
-            • <b>輸入化簡題(加減法)</b>：例如 <code>(3a+5)+(2a-3)</code> 或 <code>(5x-2y)-(x+3y)</code><br>
-            • <b>輸入展開題(乘法)</b>：例如 <code>(x+2)(x-3)</code>、<code>3x(2x-5)</code> 或 <code>(2a-1)(3a+4)</code>
-        </div>
+        <h2>🛠️ 解答模式（智慧相容出題）</h2>
         <div class="form-group">
             <label for="eqInput">✏️ 請輸入多項式算式：</label>
             <input type="text" id="eqInput" placeholder="例如：(3m + 2n) - (5m - n) 或 (x+2)(x-3)">
@@ -440,15 +435,12 @@
     </div>
 
     <div id="step_stats_panel" class="step-panel">
-        <h2>📊 學生學習歷程歷程數據分析報告</h2>
-        <p class="non-print" style="color:#666; font-size:14px; text-align:center;">
-            本報告已完美統合兩大引擎：首發正確率反映概念精熟度；綜合通關率包含原地補答表現。
-        </p>
+        <h2>📊 學生學習數據</h2>
         
         <table class="stats-table">
             <thead>
                 <tr>
-                    <th>多項式題型結構</th>
+                    <th>題型</th>
                     <th>總挑戰次數</th>
                     <th>一擊必殺 (首答對)</th>
                     <th>原地挽回 (補答對)</th>
@@ -1152,7 +1144,7 @@
     }
 
     // =========================================================================
-    // 📊 【完全修復版】全模組雙機制數據渲染 (移除 &nbsp;)
+    // 📊 全模組雙機制數據渲染
     // =========================================================================
     function calculateAndRenderStats() {
         const tbody = document.getElementById('statsTableBody');
@@ -1160,8 +1152,8 @@
         tbody.innerHTML = ''; 
 
         const enginesToRender = [
-            { key: "SIMPLIFY", name: "多項式變數化簡機 (加減法雲端數據庫)" },
-            { key: "MULTIPLY", name: "多項式乘法展開機 (田字魔法陣數據庫)" }
+            { key: "SIMPLIFY", name: "多項式化簡" },
+            { key: "MULTIPLY", name: "多項式展開" }
         ];
 
         enginesToRender.forEach(engineBlock => {
@@ -1220,7 +1212,6 @@
         const wrongListDiv = document.getElementById('statsAllWrongList');
         if(wrongListDiv) { wrongListDiv.innerHTML = totalWrongHTML; }
         
-        // 🌟 使用 info-span 樣式類別取代原始 &nbsp;，根除字元亂碼問題
         if (userRawClass) {
             const printInfo = document.getElementById('printStudentInfo');
             if(printInfo) {
